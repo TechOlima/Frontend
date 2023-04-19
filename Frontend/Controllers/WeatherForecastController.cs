@@ -28,6 +28,15 @@ namespace Frontend.Controllers
         {
             using HttpResponseMessage response = await httpClient.GetAsync("Products");
 
+            string request = response.RequestMessage.ToString();
+            
+            /*
+             response.EnsureSuccessStatusCode().WriteRequestToConsole();
+    
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            WriteLine($"{jsonResponse}\n");
+             */
+
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
             return jsonResponse;            
