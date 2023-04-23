@@ -17,6 +17,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+// подключаем CORS
+app.UseCors(builder => builder.AllowAnyOrigin());
 
 app.MapControllerRoute(
     name: "default",

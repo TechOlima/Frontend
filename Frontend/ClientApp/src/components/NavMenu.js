@@ -44,21 +44,21 @@ export class NavMenu extends Component {
                 <NavLink tag={Link} className="text-dark" to="/product">Товары</NavLink>
                 </NavItem>
                 <NavItem>
-                    <NavLink tag={Link} className="text-dark" to="/product">Заказы</NavLink>
+                    <NavLink tag={Link} className="text-dark" to="/order">Заказы</NavLink>
                 </NavItem>
                 <NavItem>
-                    <NavLink tag={Link} className="text-dark" to="/product">Товары в заказах</NavLink>
+                    <NavLink tag={Link} disabled to="/product">Товары в заказах</NavLink>
                 </NavItem>
                 <UncontrolledButtonDropdown>
                     <DropdownToggle nav caret>
                         Справочники
                     </DropdownToggle>
                     <DropdownMenu>
-                        <DropdownItem to="/product"><NavLink tag={Link} className="text-dark" to="/product">Тип товара</NavLink></DropdownItem>
-                        <DropdownItem to="/product"><NavLink tag={Link} className="text-dark" to="/product">Тип материала</NavLink></DropdownItem>
-                        <DropdownItem to="/product"><NavLink tag={Link} className="text-dark" to="/product">Вставки</NavLink></DropdownItem>
-                        <DropdownItem to="/product"><NavLink tag={Link} className="text-dark" to="/product">Фото</NavLink></DropdownItem>
-                        <DropdownItem to="/product"><NavLink tag={Link} className="text-dark" to="/product">Тип камня</NavLink></DropdownItem>
+                        <DropdownItem><NavLink tag={Link} className="text-dark" to="/producttype">Тип товара</NavLink></DropdownItem>
+                        <DropdownItem><NavLink tag={Link} className="text-dark" to="/materialtype">Тип материала</NavLink></DropdownItem>
+                        <DropdownItem><NavLink tag={Link} className="text-dark" to="/insert">Вставки</NavLink></DropdownItem>
+                        <DropdownItem><NavLink tag={Link} disabled to="/product">Фото</NavLink></DropdownItem>
+                        <DropdownItem><NavLink tag={Link} disabled to="/product">Тип камня</NavLink></DropdownItem>
                     </DropdownMenu>
                 </UncontrolledButtonDropdown>
             </ul>

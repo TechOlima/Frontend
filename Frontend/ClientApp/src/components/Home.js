@@ -6,8 +6,8 @@ export class Home extends Component {
   render() {
     return (
       <div>
-        <h1>Hello, world!</h1>
-        <p>Welcome to your new single-page application, built with:</p>        
+        <h1>Демонстрационная информационная система!</h1>
+        <p>CRM система магазин ювелирных украшений</p>        
       </div>
     );
   }

@@ -71,7 +71,7 @@ export class Product extends Component {
 
   render() {
     let contents = this.state.loading
-        ? <p><em>Загрузка...</em></p>
+        ? <p><em>Loading...</em></p>
         : Product.renderProductTable(this.state.products);
 
     return (
