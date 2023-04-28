@@ -47,7 +47,13 @@ export class NavMenu extends Component {
                     <NavLink tag={Link} className="text-dark" to="/order">Заказы</NavLink>
                 </NavItem>
                 <NavItem>
-                    <NavLink tag={Link} disabled to="/product">Товары в заказах</NavLink>
+                    <NavLink tag={Link} disabled to="/order_product">Товары в заказах</NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} className="text-dark" to="/supply">Поставки</NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} disabled to="/supply_product">Товары в поставках</NavLink>
                 </NavItem>
                 <UncontrolledButtonDropdown>
                     <DropdownToggle nav caret>
