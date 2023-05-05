@@ -1,67 +1,30 @@
 import React, { Component } from 'react';
-import { Button } from 'reactstrap';
 import settings from './settings.json';
 
-export class Product extends Component {
-    static displayName = Product.name;
+export class StoneType extends Component {
+    static displayName = StoneType.name;
 
   constructor(props) {
     super(props);
-    this.state = { products: [], loading: true };
+      this.state = { stonetypes: [], loading: true };
   }
 
   componentDidMount() {
-    this.populateProductData();
+      this.populateStoneTypeData();
   }
 
-  static renderProductTable(products) {
+    static renderStoneTypeTable(stonetypes) {
     return (
       <table className='table table-striped' aria-labelledby="tabelLabel">
         <thead>
-          <tr>
-            <th></th>
-            <th>Наименование</th>
-            <th>Состав</th>
-            <th>Тип</th>
-            <th>Материал</th>
-            <th>Код производителя</th>
-            <th>Цена</th>
-            <th>Описание</th>
-            <th>Пол</th>
-            <th>Удаленный</th>
-            <th>Размер</th>
+          <tr>            
+            <th>Наименование товара</th>                        
           </tr>
         </thead>
         <tbody>
-          {products.map(product =>
-              <tr key={product.productID}>
-                  <td>
-                      <Button
-                          color="info"
-                          size="sm"
-                          disabled
-                      >
-                          Изменить
-                      </Button>
-                      <Button
-                          color="danger"
-                          size="sm"
-                          disabled
-                      >
-                          Удалить
-                      </Button>
-
-                  </td>
-                  <td>{product.name}</td>
-                  <td>{product.equipment}</td>
-                  <td>{product.productType.name}</td>
-                  <td>{product.materialType.name}</td>
-                  <td>{product.vendorCode}</td>
-                  <td>{product.price}</td>
-                  <td>{product.description}</td>
-                  <td>{product.gender}</td>
-                  <td>{product.is_Deleted}</td>
-                  <td>{product.size}</td>
+                {stonetypes.map(stonetype =>
+                    <tr key={stonetype.stoneTypeID}>
+                        <td>{stonetype.name}</td>                        
             </tr>
           )}
         </tbody>
@@ -72,20 +35,19 @@ export class Product extends Component {
   render() {
     let contents = this.state.loading
         ? <p><em>Loading...</em></p>
-        : Product.renderProductTable(this.state.products);
+        : StoneType.renderStoneTypeTable(this.state.stonetypes);
 
     return (
       <div>
-            <h1 id="tabelLabel" >Товары</h1>
-            <button className="btn btn-primary" disabled onClick={this.incrementCounter}>Добавить товар</button>
+            <h1 id="tabelLabel" >Тип камня</h1>            
         {contents}
       </div>
     );
   }
 
-    async populateProductData() {        
-        const response = await fetch(settings.apiurl + '/Products');
+    async populateStoneTypeData() {
+        const response = await fetch(settings.apiurl + '/StoneTypes');
         const data = await response.json();
-        this.setState({ products: data, loading: false });
+        this.setState({ stonetypes: data, loading: false });
   }
 }

@@ -47,14 +47,8 @@ export class NavMenu extends Component {
                     <NavLink tag={Link} className="text-dark" to="/order">Заказы</NavLink>
                 </NavItem>
                 <NavItem>
-                    <NavLink tag={Link} disabled to="/order_product">Товары в заказах</NavLink>
-                </NavItem>
-                <NavItem>
                     <NavLink tag={Link} className="text-dark" to="/supply">Поставки</NavLink>
-                </NavItem>
-                <NavItem>
-                    <NavLink tag={Link} disabled to="/supply_product">Товары в поставках</NavLink>
-                </NavItem>
+                </NavItem>                
                 <UncontrolledButtonDropdown>
                     <DropdownToggle nav caret>
                         Справочники
@@ -63,8 +57,12 @@ export class NavMenu extends Component {
                         <DropdownItem><NavLink tag={Link} className="text-dark" to="/producttype">Тип товара</NavLink></DropdownItem>
                         <DropdownItem><NavLink tag={Link} className="text-dark" to="/materialtype">Тип материала</NavLink></DropdownItem>
                         <DropdownItem><NavLink tag={Link} className="text-dark" to="/insert">Вставки</NavLink></DropdownItem>
-                        <DropdownItem><NavLink tag={Link} disabled to="/product">Фото</NavLink></DropdownItem>
-                        <DropdownItem><NavLink tag={Link} disabled to="/product">Тип камня</NavLink></DropdownItem>
+                                  <DropdownItem><NavLink tag={Link} className="text-dark" to="/photo">Фото</NavLink></DropdownItem>
+                                  <DropdownItem><NavLink tag={Link} className="text-dark" to="/stonetype">Тип камня</NavLink></DropdownItem>
+                                  <DropdownItem divider />
+                                  <DropdownItem><NavLink tag={Link} disabled to="/product_order">Товары в заказах</NavLink></DropdownItem>
+                                  <DropdownItem><NavLink tag={Link} disabled to="/product_supply">Товары в поставках</NavLink></DropdownItem>
+
                     </DropdownMenu>
                 </UncontrolledButtonDropdown>
             </ul>

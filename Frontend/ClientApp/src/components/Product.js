@@ -37,20 +37,11 @@ export class Product extends Component {
               <tr key={product.productID}>
                   <td>
                       <Button
-                          color="info"
-                          size="sm"
-                          disabled
+                          color="primary"
+                          size="sm"                          
                       >
                           Изменить
-                      </Button>
-                      <Button
-                          color="danger"
-                          size="sm"
-                          disabled
-                      >
-                          Удалить
-                      </Button>
-
+                      </Button>  
                   </td>
                   <td>{product.name}</td>
                   <td>{product.equipment}</td>
@@ -72,12 +63,13 @@ export class Product extends Component {
   render() {
     let contents = this.state.loading
         ? <p><em>Загрузка...</em></p>
-        : Product.renderProductTable(this.state.products);
+          : Product.renderProductTable(this.state.products);
+
 
     return (
       <div>
             <h1 id="tabelLabel" >Товары</h1>
-            <button className="btn btn-primary" disabled onClick={this.incrementCounter}>Добавить товар</button>
+            <button className="btn btn-primary" onClick={this.incrementCounter}>Добавить товар</button>
         {contents}
       </div>
     );

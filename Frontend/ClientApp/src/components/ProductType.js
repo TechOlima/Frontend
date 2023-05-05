@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Button } from 'reactstrap';
 import settings from './settings.json';
 
 export class ProductType extends Component {
@@ -18,31 +17,13 @@ export class ProductType extends Component {
     return (
       <table className='table table-striped' aria-labelledby="tabelLabel">
         <thead>
-          <tr>
-            <th></th>
+          <tr>            
             <th>Наименование</th>                
           </tr>
         </thead>
         <tbody>
                 {productTypes.map(productType =>
-                    <tr key={productType.productTypeID}>
-                  <td>
-                      <Button
-                          color="info"
-                          size="sm"
-                          disabled
-                      >
-                          Изменить
-                      </Button>
-                      <Button
-                          color="danger"
-                          size="sm"
-                          disabled
-                      >
-                          Удалить
-                      </Button>
-
-                  </td>
+                    <tr key={productType.productTypeID}>                  
                         <td>{productType.name}</td>                        
             </tr>
           )}
@@ -58,8 +39,7 @@ export class ProductType extends Component {
 
     return (
       <div>
-            <h1 id="tabelLabel" >Типы товара</h1>
-            <button className="btn btn-primary" disabled onClick={this.incrementCounter}>Добавить тип товара</button>
+            <h1 id="tabelLabel" >Типы товара</h1>            
         {contents}
       </div>
     );

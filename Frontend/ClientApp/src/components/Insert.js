@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Button } from 'reactstrap';
 import settings from './settings.json';
 
 export class Insert extends Component {
@@ -18,33 +17,15 @@ export class Insert extends Component {
     return (
       <table className='table table-striped' aria-labelledby="tabelLabel">
         <thead>
-          <tr>
-            <th></th>
-            <th>Продукт</th>
+          <tr>            
+            <th>Товар</th>
             <th>Вес</th>
             <th>Тип камня</th>            
           </tr>
         </thead>
         <tbody>
           {inserts.map(insert =>
-              <tr key={insert.insertID}>
-                  <td>
-                      <Button
-                          color="info"
-                          size="sm"
-                          disabled
-                      >
-                          Изменить
-                      </Button>
-                      <Button
-                          color="danger"
-                          size="sm"
-                          disabled
-                      >
-                          Удалить
-                      </Button>
-
-                  </td>
+              <tr key={insert.insertID}>                  
                   <td>{insert.product.name}</td>
                   <td>{insert.weight}</td>
                   <td>{insert.stoneType.name}</td>                  
@@ -62,8 +43,7 @@ export class Insert extends Component {
 
     return (
       <div>
-            <h1 id="tabelLabel" >Вставки</h1>
-            <button className="btn btn-primary" disabled onClick={this.incrementCounter}>Добавить вставку</button>
+            <h1 id="tabelLabel" >Вставки</h1>            
         {contents}
       </div>
     );

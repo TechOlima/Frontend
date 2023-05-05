@@ -33,20 +33,11 @@ export class Supply extends Component {
                     <tr key={supply.supplyID}>
                   <td>
                       <Button
-                          color="info"
-                          size="sm"
-                          disabled
+                          color="primary"
+                          size="sm"                          
                       >
                           Изменить
-                      </Button>
-                      <Button
-                          color="danger"
-                          size="sm"
-                          disabled
-                      >
-                          Удалить
-                      </Button>
-
+                      </Button>  
                   </td>
                         <td>{supply.shippingDate}</td>
                         <td>{supply.receivingDate}</td>                                              
@@ -72,7 +63,7 @@ export class Supply extends Component {
     return (
       <div>
             <h1 id="tabelLabel" >Поставки</h1>
-            <button className="btn btn-primary" disabled onClick={this.incrementCounter}>Добавить поставку</button>
+            <button className="btn btn-primary" onClick={this.incrementCounter}>Добавить поставку</button>
         {contents}
       </div>
     );
