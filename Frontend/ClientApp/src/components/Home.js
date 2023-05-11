@@ -1,13 +1,139 @@
 import React, { Component } from 'react';
+import { Row, Col, Card, CardTitle, CardText, Button, NavLink} from 'reactstrap';
+import { Link } from 'react-router-dom';
+import settings from './settings.json';
+
 
 export class Home extends Component {
-  static displayName = Home.name;
+    static displayName = Home.name;
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            products: [],
+            orders: [],
+            supplies: [],
+            storages: [],
+            productsloading: true,
+            ordersloading: true,
+            suppliesloading: true,
+            storagesloading: true,
+        };        
+    }
+
+    componentDidMount() {
+        this.populateData();
+    }
+
+    async populateData() {
+        //загружаем заказы
+        let response = await fetch(settings.apiurl + '/Orders');
+        let data = await response.json();
+        this.setState({ orders: data, ordersloading: false });
+        //загружаем товары
+        response = await fetch(settings.apiurl + '/Products');
+        data = await response.json();
+        this.setState({ products: data, productsloading: false });
+        //загружаем поставки
+        response = await fetch(settings.apiurl + '/Supplies');
+        data = await response.json();
+        this.setState({ supplies: data, suppliesloading: false });
+        //загружаем склад
+        response = await fetch(settings.apiurl + '/Storages');
+        data = await response.json();
+        this.setState({ storages: data, storagesloading: false });
+    }
 
   render() {
     return (
       <div>
-        <h1>Демонстрационная информационная система!</h1>
-        <p>CRM система магазин ювелирных украшений</p>        
+        <h1>Система управления заказами!</h1>
+            <Row>
+                <Col sm="6">
+                    <Card body>
+                        <CardTitle tag="h5">
+                            Товары
+                        </CardTitle>
+                        <CardText>
+                            {this.state.productsloading ? <p><em>Загрузка...</em></p> :
+                                <ul>
+                                    {this.state.products.slice(0, 5).map(product =>
+                                        <li key={product.productID}>
+                                            {product.name}
+                                        </li>
+                                    )}
+                                </ul>}                            
+                        </CardText>
+                        <Button color="light">
+                            <NavLink tag={Link} to="/product">Перейти</NavLink>
+                        </Button>
+                    </Card>
+                </Col>
+                <Col sm="6">
+                    <Card body>
+                        <CardTitle tag="h5">
+                            Заказы
+                        </CardTitle>
+                        <CardText>
+                            {this.state.ordersloading ? <p><em>Загрузка...</em></p> :
+                                <ul>
+                                    {this.state.orders.slice(0, 5).map(order =>
+                                        <li key={order.orderID}>
+                                            {order.clientName}&nbsp;<b>{order.totalSum} руб.</b>
+                                        </li>
+                                    )}
+                                </ul>}
+                        </CardText>
+                        <Button color="light">
+                            <NavLink tag={Link} to="/order">Перейти</NavLink>
+                        </Button>
+                    </Card>
+                </Col>
+            </Row>
+            <br />
+            <br />
+            <Row>
+                <Col sm="6">
+                    <Card body>
+                        <CardTitle tag="h5">
+                            Поставки
+                        </CardTitle>
+                        <CardText>
+                            {this.state.suppliesloading ? <p><em>Загрузка...</em></p> : <ul>
+                                {this.state.supplies.slice(0, 5).map(supplу =>
+                                    <li key={supplу.supplуID}>
+                                        {new Date(supplу.shippingDate).toLocaleDateString()}&nbsp;<b>{supplу.totalSum} руб.</b>
+                                    </li>
+                                )}
+                            </ul>}
+                        </CardText>
+                        <Button color="light">
+                            <NavLink tag={Link} to="/supply">Перейти</NavLink>
+                        </Button>
+                    </Card>
+                </Col>
+                <Col sm="6">
+                    <Card body>
+                        <CardTitle tag="h5">
+                            Склад
+                        </CardTitle>
+                        <CardText>
+                            {this.state.storageloading ? <p><em>Загрузка...</em></p> : 
+                                <ul>
+                                    {this.state.storages.slice(0, 5).map(storage =>
+                                        <li key={storage.storageID}>
+                                            {storage.product.name}
+                                        </li>
+                                    )}
+                                </ul>}
+                        </CardText>
+                        <Button color="light">
+                            <NavLink tag={Link} to="/storage">Перейти</NavLink>
+                        </Button>
+                    </Card>
+                </Col>
+            </Row>
+            
       </div>
     );
   }
