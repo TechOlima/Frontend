@@ -55,7 +55,7 @@ export class Home extends Component {
                             Товары
                         </CardTitle>
                         <CardText>
-                            {this.state.productsloading ? <p><em>Загрузка...</em></p> :
+                            {this.state.productsloading ? <em>Загрузка...</em> :
                                 <ul>
                                     {this.state.products.slice(0, 5).map(product =>
                                         <li key={product.productID}>
@@ -75,7 +75,7 @@ export class Home extends Component {
                             Заказы
                         </CardTitle>
                         <CardText>
-                            {this.state.ordersloading ? <p><em>Загрузка...</em></p> :
+                            {this.state.ordersloading ? <em>Загрузка...</em> :
                                 <ul>
                                     {this.state.orders.slice(0, 5).map(order =>
                                         <li key={order.orderID}>
@@ -99,7 +99,7 @@ export class Home extends Component {
                             Поставки
                         </CardTitle>
                         <CardText>
-                            {this.state.suppliesloading ? <p><em>Загрузка...</em></p> : <ul>
+                            {this.state.suppliesloading ? <em>Загрузка...</em> : <ul>
                                 {this.state.supplies.slice(0, 5).map(supplу =>
                                     <li key={supplу.supplуID}>
                                         {new Date(supplу.shippingDate).toLocaleDateString()}&nbsp;<b>{supplу.totalSum} руб.</b>
@@ -118,7 +118,7 @@ export class Home extends Component {
                             Склад
                         </CardTitle>
                         <CardText>
-                            {this.state.storageloading ? <p><em>Загрузка...</em></p> : 
+                            {this.state.storageloading ? <em>Загрузка...</em> : 
                                 <ul>
                                     {this.state.storages.slice(0, 5).map(storage =>
                                         <li key={storage.storageID}>
