@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, Card, CardTitle, CardText, Button, NavLink} from 'reactstrap';
+import { Row, Col, Card, CardTitle, Button, NavLink} from 'reactstrap';
 import { Link } from 'react-router-dom';
 import settings from './settings.json';
 
@@ -53,8 +53,7 @@ export class Home extends Component {
                     <Card body>
                         <CardTitle tag="h5">
                             Товары
-                        </CardTitle>
-                        <CardText>
+                        </CardTitle>                        
                             {this.state.productsloading ? <em>Загрузка...</em> :
                                 <ul>
                                     {this.state.products.slice(0, 5).map(product =>
@@ -62,8 +61,7 @@ export class Home extends Component {
                                             {product.name}
                                         </li>
                                     )}
-                                </ul>}                            
-                        </CardText>
+                                </ul>}                        
                         <Button color="light">
                             <NavLink tag={Link} to="/product">Перейти</NavLink>
                         </Button>
@@ -74,7 +72,7 @@ export class Home extends Component {
                         <CardTitle tag="h5">
                             Заказы
                         </CardTitle>
-                        <CardText>
+                        
                             {this.state.ordersloading ? <em>Загрузка...</em> :
                                 <ul>
                                     {this.state.orders.slice(0, 5).map(order =>
@@ -83,7 +81,7 @@ export class Home extends Component {
                                         </li>
                                     )}
                                 </ul>}
-                        </CardText>
+                        
                         <Button color="light">
                             <NavLink tag={Link} to="/order">Перейти</NavLink>
                         </Button>
@@ -98,15 +96,15 @@ export class Home extends Component {
                         <CardTitle tag="h5">
                             Поставки
                         </CardTitle>
-                        <CardText>
+                        
                             {this.state.suppliesloading ? <em>Загрузка...</em> : <ul>
                                 {this.state.supplies.slice(0, 5).map(supplу =>
-                                    <li key={supplу.supplуID}>
+                                    <li key={supplу.supplyID}>
                                         {new Date(supplу.shippingDate).toLocaleDateString()}&nbsp;<b>{supplу.totalSum} руб.</b>
                                     </li>
                                 )}
                             </ul>}
-                        </CardText>
+                        
                         <Button color="light">
                             <NavLink tag={Link} to="/supply">Перейти</NavLink>
                         </Button>
@@ -117,16 +115,16 @@ export class Home extends Component {
                         <CardTitle tag="h5">
                             Склад
                         </CardTitle>
-                        <CardText>
+                        
                             {this.state.storageloading ? <em>Загрузка...</em> : 
                                 <ul>
                                     {this.state.storages.slice(0, 5).map(storage =>
                                         <li key={storage.storageID}>
-                                            {storage.product.name}
+                                            {storage.productName}
                                         </li>
                                     )}
                                 </ul>}
-                        </CardText>
+                        
                         <Button color="light">
                             <NavLink tag={Link} to="/storage">Перейти</NavLink>
                         </Button>

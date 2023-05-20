@@ -26,9 +26,9 @@ export class Insert extends Component {
         <tbody>
           {inserts.map(insert =>
               <tr key={insert.insertID}>                  
-                  <td>{insert.product.name}</td>
+                  <td>{insert.productName}</td>
                   <td>{insert.weight}</td>
-                  <td>{insert.stoneType.name}</td>                  
+                  <td>{insert.stoneType}</td>                  
             </tr>
           )}
         </tbody>

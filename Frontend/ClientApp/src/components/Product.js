@@ -53,7 +53,8 @@ export class Product extends Component {
             genderType: product ? product.genderType ? product.genderType : "" :"",
             is_Deleted: product ? product.is_Deleted : null,
             photos: product ? product.photos ? product.photos : [] : [],
-            inserts: product ? product.inserts ? product.inserts : [] : []
+            inserts: product ? product.inserts ? product.inserts : [] : [],
+            storageCount: product ? product.storageCount ? product.storageCount : "" : "",
         };
     }
 
@@ -112,7 +113,7 @@ export class Product extends Component {
             const data = await response.json();
             this.setState({ insertSuccessMessage: 'Данные успешно сохранены', insertErrorMessage: null, activeProduct: this.getActiveProduct(data) });
         }
-        else this.setState({ insertSuccessMessage: 'Произошла ошибка при сохранении', insertErrorMessage: null });
+        else this.setState({ insertErrorMessage: 'Произошла ошибка при сохранении', insertSuccessMessage: null });
     }
     async deleteInsert(insertID) {
         const response = await fetch(settings.apiurl + '/Inserts/' + insertID, {
@@ -329,13 +330,14 @@ export class Product extends Component {
                                     <Row>
                                         <Col md={6}>
                                             <FormGroup>
-                                                <Label for="storageInput">
-                                                    Количество на складе
+                                                <Label for="storageCount">
+                                                    Остаток на складе
                                                 </Label>
                                                 <Input
-                                                    readOnly
-                                                    id="storageInput"
-                                                    name="storage"
+                                                    plaintext
+                                                    id="storageCount"
+                                                    name="storageCount"
+                                                    defaultValue={this.state.activeProduct ? this.state.activeProduct.storageCount : ''}                                                    
                                                 />
                                             </FormGroup>
                                         </Col>
@@ -419,7 +421,9 @@ export class Product extends Component {
                                                         console.log(ev.target.value);
                                                         this.setState({ newInsertType: ev.target.value });
                                                     }}
-                                                >                                                
+                                                >   <option disabled value="">
+                                                        Выберите значение
+                                                    </option>
                                                     {this.state.stoneTypes.map(stoneType =>
                                                         <option value={stoneType.name} key={stoneType.stoneTypeID}>
                                                             {stoneType.name}
@@ -479,7 +483,8 @@ export class Product extends Component {
             <th>Код производителя</th>            
             <th>Описание</th>
             <th>Пол</th>            
-            <th>Размер</th>
+                    <th>Размер</th>
+                    <th>Остаток на складе</th>
           </tr>
         </thead>
         <tbody>
@@ -501,7 +506,8 @@ export class Product extends Component {
                   <td>{product.vendorCode}</td>                  
                   <td>{product.description}</td>
                   <td>{product.gendeType}</td>                  
-                  <td>{product.size}</td>
+                        <td>{product.size}</td>
+                        <td>{product.storageCount}</td>
             </tr>
           )}
         </tbody>
