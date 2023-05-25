@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Button, Input, Row, Nav, NavItem, NavLink, TabContent, TabPane, Col, Modal, ModalBody, ModalHeader, ModalFooter, Form, FormGroup, Label } from 'reactstrap';
-import { Card, CardHeader, CardBody, Alert } from 'reactstrap';
+import { Button, Input, Row, Nav, NavItem, NavLink, TabContent, TabPane, Col, Modal, ModalBody, ModalHeader, ModalFooter, Form, FormGroup, Label, CardFooter } from 'reactstrap';
+import { Card, CardHeader, CardBody, Alert, CardImg, ButtonGroup } from 'reactstrap';
 import settings from './settings.json';
+//import axios from 'axios';
 
 export class Product extends Component {
-    static displayName = Product.name;
+    static displayName = Product.name;    
 
   constructor(props) {
     super(props);
@@ -24,7 +25,10 @@ export class Product extends Component {
           insertSuccessMessage: null,
           insertErrorMessage: null,
           newInsertWeight: '',
-          newInsertType: ''
+          newInsertType: '',
+          selectedImage: null,
+          imageSuccessMessage: null,
+          imageErrorMessage: null,
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editProduct = this.editProduct.bind(this);
@@ -35,7 +39,81 @@ export class Product extends Component {
       this.deleteActiveProduct = this.deleteActiveProduct.bind(this);
       this.addNewInsert = this.addNewInsert.bind(this);
       this.deleteInsert = this.deleteInsert.bind(this);
-  }
+      this.UploadImage = this.UploadImage.bind(this);
+      this.MakeCoverImage = this.MakeCoverImage.bind(this);
+      this.DeleteImage = this.DeleteImage.bind(this);
+    }
+    
+    async UploadImage() {
+        let newPhoto = {
+            productID: this.state.activeProduct.productID,
+            is_Cover: false,
+            photoUrl: this.state.selectedImage
+        };
+        const response = await fetch(settings.apiurl + '/Photos/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
+            body: JSON.stringify(newPhoto)
+        });
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID);
+            const data = await response.json();
+            this.setState({
+                imageSuccessMessage: 'Фотография добавлена',
+                imageErrorMessage: null,
+                selectedImage: null,
+                activeProduct: this.getActiveProduct(data)
+            });
+        }
+        else this.setState({ imageErrorMessage: 'Произошла ошибка при добавлении фотографии', imageSuccessMessage: null });
+    }
+    async MakeCoverImage(photo) {
+        let newPhoto = {
+            photoID: photo.photoID,
+            productID: photo.productID,
+            is_Cover: true,
+            photoUrl: photo?.photoUrl,
+            vK_ID: photo?.vK_ID
+        };
+        const response = await fetch(settings.apiurl + '/Photos/' + photo.photoID, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
+            body: JSON.stringify(newPhoto)
+        });
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID);
+            const data = await response.json();
+            this.setState({
+                imageSuccessMessage: 'Фотография сделана обложкой',
+                imageErrorMessage: null,
+                selectedImage: null,
+                activeProduct: this.getActiveProduct(data)
+            });
+        }
+        else this.setState({ imageErrorMessage: 'Произошла ошибка', imageSuccessMessage: null });
+    }
+    async DeleteImage(photoID) {
+        const response = await fetch(settings.apiurl + '/Photos/' + photoID, {
+            method: 'DELETE',
+        });        
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID);
+            const data = await response.json();
+            this.setState({
+                imageSuccessMessage: 'Фотография удалена',
+                imageErrorMessage: null,
+                selectedImage: null,
+                activeProduct: this.getActiveProduct(data)
+            });
+        }
+        else this.setState({ imageErrorMessage: 'Произошла ошибка при удалении фотографии', imageSuccessMessage: null });
+    }
     toggleModal() {
         let newmodal = !this.state.showModal;
         this.setState({ showModal: newmodal });
@@ -55,6 +133,7 @@ export class Product extends Component {
             photos: product ? product.photos ? product.photos : [] : [],
             inserts: product ? product.inserts ? product.inserts : [] : [],
             storageCount: product ? product.storageCount ? product.storageCount : "" : "",
+            vK_ID: product?.vK_ID ? product.vK_ID : ""
         };
     }
 
@@ -142,7 +221,9 @@ export class Product extends Component {
             successMessage: null,
             errorMessage: null,
             insertSuccessMessage: null,
-            insertErrorMessage: null
+            insertErrorMessage: null,
+            imageSuccessMessage: null,
+            imageErrorMessage: null
         }, () => {
             this.toggleModal();
         });        
@@ -156,9 +237,84 @@ export class Product extends Component {
     renderModal() {        
         return (
             <div>
-                <Modal isOpen={this.state.showModal} size='lg' toggle={this.toggleModal}>
+                <Modal isOpen={this.state.showModal} size={this.state.activeProduct?.productID ? 'xl' : 'lg' } toggle={this.toggleModal}>
                     <ModalHeader toggle={this.toggleModal}>Карточка товара</ModalHeader>
                     <ModalBody>
+                        <Row>{
+                            this.state.activeProduct?.productID ?
+                            <Col md={3}>
+                                {this.state.imageSuccessMessage ?
+                                    <Alert color="success">
+                                        {this.state.imageSuccessMessage}
+                                    </Alert>
+                                    : ''}
+                                {this.state.imageErrorMessage ?
+                                    <Alert color="danger">
+                                        {this.state.imageErrorMessage}
+                                    </Alert>
+                                        : ''}                                    
+                                
+                                        <Card className='mt-2'>
+                                            <CardHeader>Добавить изображение</CardHeader>
+                                            {this.state.selectedImage ? 
+                                                <CardImg
+                                                    alt="newphoto"
+                                                width="100%"                                                
+                                                    src={this.state.selectedImage}
+                                                /> : ""
+                                            }
+                                            <CardBody>
+                                            <FormGroup>                                                
+                                                <Input
+                                                    name="nameInput"
+                                                    placeholder="Введите url изображение"
+                                                    value={this.state.selectedImage ? this.state.selectedImage : ''}
+                                                    onChange={(event) => {
+                                                        this.setState({ selectedImage: event.target.value });
+                                                    }}
+                                                />
+                                            </FormGroup>
+                                            </CardBody>                                            
+                                        {this.state.selectedImage ?
+                                            <CardFooter ><button
+                                                className="btn btn-primary"
+                                                width="100%"
+                                                color="primary"
+                                                onClick={this.UploadImage}
+                                                type="button"
+                                            >Добавить</button>
+                                            </CardFooter>
+                                                : ''}
+                                            
+                                        </Card>                                                                     
+                                {
+                                    this.state.activeProduct ? this.state.activeProduct.photos ?
+                                        this.state.activeProduct.photos.map(photo =>
+                                            <Card className='mt-2' key={photo.photoID}>
+                                                <CardImg
+                                                    alt={photo}
+                                                    width="100%"
+                                                    src={photo.photoUrl ? photo.photoUrl : ''}
+                                                />
+                                                <CardFooter >
+                                                    <ButtonGroup size="sm" className='col-12'>
+                                                        {!photo.is_Cover ?
+                                                            <Button outline
+                                                                onClick={() => this.MakeCoverImage(photo) } >
+                                                            Сделать обложкой
+                                                        </Button> : ''}                                                        
+                                                        <Button outline
+                                                                onClick={() => this.DeleteImage(photo.photoID)}>
+                                                            Удалить
+                                                        </Button>                                                        
+                                                    </ButtonGroup>
+                                                </CardFooter>
+                                            </Card>
+                                        ) : '' : ''
+                                }                                
+                            </Col> : ''
+                            }
+                            <Col md={this.state.activeProduct?.productID ? 9 : 12}>
                         {this.state.successMessage ? 
                             <Alert color="success">
                                 {this.state.successMessage}
@@ -454,7 +610,9 @@ export class Product extends Component {
                                         </Row>                                        
                                     </CardBody>
                                 </Card> : ""
-                        }                        
+                            }
+                            </Col>
+                            </Row>
                     </ModalBody>
                     <ModalFooter>
                         {this.state.activeProduct ? this.state.activeProduct.productID ? <Button color="danger" onClick={this.deleteActiveProduct}>
@@ -528,7 +686,7 @@ export class Product extends Component {
 
     return (
       <div>
-            <h1 id="tabelLabel" >Товары</h1>
+            <h1 id="tabelLabel" >Товары</h1>            
             <div style={{ textAlign: 'right' }}>
                 <button className="btn btn-primary" onClick={() =>
                 {

@@ -48,7 +48,10 @@ export class NavMenu extends Component {
                 </NavItem>
                 <NavItem>
                     <NavLink tag={Link} className="text-dark" to="/supply">Поставки</NavLink>
-                </NavItem>                
+                          </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} className="text-dark" to="/vk">VK</NavLink>
+                </NavItem>
                 <UncontrolledButtonDropdown>
                     <DropdownToggle nav caret>
                         Справочники
