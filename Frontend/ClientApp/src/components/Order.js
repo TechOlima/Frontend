@@ -31,7 +31,29 @@ export class Order extends Component {
       this.deleteActiveOrder = this.deleteActiveOrder.bind(this);
       this.addStorageInOrder = this.addStorageInOrder.bind(this);      
       this.populateStorages = this.populateStorages.bind(this);
-  }
+      this.standingAdress = this.standingAdress.bind(this);
+
+    }
+    async standingAdress() {
+        const response = await fetch(settings.mkr_service_url + '/DadataAdress/ClearAddress?adress=' + this.state.activeOrder?.deliveryAddress);
+        if (response.ok) {            
+            const data = await response.json();
+            //заполняет данные в заказе по адресу
+            let order = this.state.activeOrder;
+            order.deliveryAddressStd = data.result;
+            order.streetWithType = data.streetWithType;
+            order.house = data.house;
+            order.block = data.block;
+            order.entrance = data.entrance;
+            order.floor = data.floor;
+            order.flat = data.flat;
+            order.qc = data.qc;
+            let message = data.qcDescription;
+            this.setState({ activeOrder: order, successMessage: order.qc == "0" ? message : "", errorMessage: order.qc !== "0" ? message : "" });
+        }
+        else this.setState({ errorMessage: 'Произошла ошибка при распознавании адреса', successMessage: null });
+    }
+
     toggleModal() {
         let newmodal = !this.state.showModal;
         this.setState({ showModal: newmodal });
@@ -42,13 +64,22 @@ export class Order extends Component {
             clientName: order ? order.clientName ? order.clientName : "" : "",
             clientPhone: order ? order.clientPhone ? order.clientPhone : "" : "",
             clientEmail: order ? order.clientEmail ? order.clientEmail : "" : "",
-            state: order ? order.state ? order.state : "" : "",
+            state: order ? order.state ? typeof order.state === 'object' ? order.state.name : order.state : "" : "",
             totalSum: order ? order.totalSum ? order.totalSum : "" : "",
             deliveryAddress: order ? order.deliveryAddress ? order.deliveryAddress : "" : "",
             deliveryDate: order ? order.deliveryDate ? order.deliveryDate : "" : "",
             orderDate: order ? order.orderDate ? order.orderDate : "" : "",
             note: order ? order.note ? order.note : "" : "",
-            storages: order ? order.storages ? order.storages : [] : []
+            storages: order ? order.storages ? order.storages : [] : [],
+            //стандартизированный адрес
+            deliveryAddressStd: order?.deliveryAddressStd ? order.deliveryAddressStd : "",
+            streetWithType: order?.streetWithType ? order.streetWithType : "",
+            house: order?.house ? order.house : "",
+            block: order?.block ? order.block : "",
+            entrance: order?.entrance ? order.entrance : "",
+            floor: order?.floor ? order.floor : "",
+            flat: order?.flat ? order.flat : "",
+            qc: order?.qc ? order.qc : "",
         };
     }
 
@@ -232,6 +263,7 @@ export class Order extends Component {
                                                     }}
                                                 >
                                                 </Input>
+                                                <Button className="mt-2" onClick={this.standingAdress}>Стандартизировать</Button>
                                             </FormGroup>
                                             <FormGroup>
                                                 <Label for="deliveryDate">
@@ -302,6 +334,104 @@ export class Order extends Component {
                                     </FormGroup>
                                 </Col> : ''}                                
                             </Row>
+                            {
+                                this.state.activeOrder?.deliveryAddressStd ?
+                                    <Card
+                                        className="my-2"
+                                        style={{
+                                            width: '100%'
+                                        }}
+                                    >
+                                        <CardHeader>
+                                            <b>Стандартизированный адрес</b>
+                                        </CardHeader>
+                                        <CardBody> 
+                                                <Row>
+                                                <Col md={12}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Стандартизированный адрес
+                                                        </Label>
+                                                        <Input
+                                                            type='textarea'
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.deliveryAddressStd : ''}
+                                                        />
+                                                    </FormGroup>
+                                                </Col>
+                                            </Row>
+                                            <Row>
+                                                    <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Улица
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            type='textarea'
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.streetWithType : ''}
+                                                        />
+                                                    </FormGroup>
+                                                    </Col>
+                                                    <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Дом
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.house : ''}
+                                                        />
+                                                    </FormGroup>
+                                                    </Col>                                            
+                                                <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Корпус
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.block : ''}
+                                                        />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Подьезд
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.entrance : ''}
+                                                        />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Этаж
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.floor : ''}
+                                                        />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <FormGroup>
+                                                        <Label>
+                                                            Квартира
+                                                        </Label>
+                                                        <Input
+                                                            plaintext
+                                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.flat : ''}
+                                                        />
+                                                    </FormGroup>
+                                                </Col>
+                                            </Row>
+                                        </CardBody>
+                                    </Card> : ""
+                            }
                             {
                                 this.state.activeOrder?.orderID ?
                                     <Card
