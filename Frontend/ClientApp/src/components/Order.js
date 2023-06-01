@@ -577,13 +577,13 @@ export class Order extends Component {
                     <ModalFooter>
                         {this.state.activeOrder ? this.state.activeOrder.orderID ?
                             <div>
-                                <Button className="pr-2" onClick={this.deleteActiveOrder}>
+                                <Button onClick={this.deleteActiveOrder}>
                                     Отметить выполненным
-                                </Button>
-                                <Button className="pr-2" onClick={this.deleteActiveOrder}>
+                                </Button>{' '}
+                                <Button onClick={this.deleteActiveOrder}>
                                     Передать в доставку
-                                </Button>
-                                <Button className="pr-2" color="danger" onClick={this.deleteActiveOrder}>
+                                </Button>{' '}
+                                <Button color="danger" onClick={this.deleteActiveOrder}>
                                     Удалить
                                 </Button>
                             </div>
