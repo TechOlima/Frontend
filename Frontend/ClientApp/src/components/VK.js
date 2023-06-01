@@ -14,12 +14,13 @@ export class VK extends Component {
           activeTab: "1",
           searchPattern: "",
           code: null,
-          accessToken: "vk1.a.mJJI6WGXSu4zSdLn8luG6Oi04QF5_KQcmpKt0WWy1wkM0JCownxtPvHM-FXxEgfdLjxKuMoVf5U8Ar-zsrph8DcBIRCncaQuwV0fKMoEIWqBm5XXU2LDJue7ZViojn_adut2eq016rnBU0N3qT1cpQlWeYMAPskcibgoErGi31mzIWVqaKkzksyp1mAnm5qriu093rMLo-EmTahESXTgjw",
-          uploadServer: "https://pu.vk.com/c520532/ss2212/upload.php?act=do_add&mid=803781479&aid=-53&gid=220761511&hash=c3f8e80b868819496421ce4dd49dfb17&rhash=e2b0a5a24d6d487c16c936ea8becc12e&swfupload=1&api=1&market_photo=1",
+          accessToken: null,
+          uploadServer: null,
           photosSuccessMessage: null,
           photosErrorMessage: null,
           productsSuccessMessage: null,
-          productsErrorMessage: null          
+          productsErrorMessage: null,
+          vkError: null,
       };
       this.renderProductTable = this.renderProductTable.bind(this);
       this.renderPhotosTable = this.renderPhotosTable.bind(this);
@@ -179,7 +180,7 @@ export class VK extends Component {
                 const data = await response.json();                
                 this.setState({ uploadServer: data.response.upload_url });
             }
-            else alert('Произошла ошибка при получении адреса сервера для загрузки фотографий');
+            else this.setState({ vkError: "Произошла ошибка при получении адреса сервера для загрузки фотографий" });            
         }        
     }
     async getToken(code) {
@@ -196,12 +197,12 @@ export class VK extends Component {
         if (response.ok) {
             const data = await response.json();
             if (data.access_token)
-                this.setState({ accessToken: data.access_token }, () => this.uploadServerVK());
+                this.setState({ accessToken: data.access_token, vkError: null }, () => this.uploadServerVK());
         }
-        alert("Произошла ошибка при получении токена доступа в ВК");        
+        else this.setState({ vkError: "Произошла ошибка при получении токена доступа в ВК. Попробуйте авторизоваться еще раз." });
     }
     getCode() {
-        window.location.href = 'https://oauth.vk.com/authorize?client_id=51653671&display=page&redirect_uri=https://frontend-v2-20230520121235.azurewebsites.net&scope=market,photos&response_type=code&v=5.131';
+        window.location.href = 'https://oauth.vk.com/authorize?client_id=51653671&display=page&redirect_uri=' + settings.redirect_uri + '&scope=market,photos&response_type=code&v=5.131';
     }
     componentDidMount() {      
       this.populateProductData();
@@ -314,8 +315,9 @@ export class VK extends Component {
       <div>
             <h1 id="tabelLabel" >Передача данных в ВК</h1>
             {
-                !this.state.accessToken && !this.state.code ?
+                !this.state.accessToken || !this.state.code ?
                     <div>
+                        {this.state.vkError ? <Alert color='danger'>{ this.state.vkError }</Alert> : ''}
                         <h4 id="tabelLabel" >Для взаимодействия с ВК необходимо авторизоваться </h4>
                         <Button
                             color="primary"

@@ -49,7 +49,7 @@ export class Order extends Component {
             order.flat = data.flat;
             order.qc = data.qc;
             let message = data.qcDescription;
-            this.setState({ activeOrder: order, successMessage: order.qc == "0" ? message : "", errorMessage: order.qc !== "0" ? message : "" });
+            this.setState({ activeOrder: order, successMessage: order.qc === "0" ? message : "", errorMessage: order.qc !== "0" ? message : "" });
         }
         else this.setState({ errorMessage: 'Произошла ошибка при распознавании адреса', successMessage: null });
     }
@@ -80,11 +80,13 @@ export class Order extends Component {
             floor: order?.floor ? order.floor : "",
             flat: order?.flat ? order.flat : "",
             qc: order?.qc ? order.qc : "",
+            emailNotification: order ? order.emailNotification !== null ? order.emailNotification : false : false,
+            smsNotification: order ? order.smsNotification !== null ? order.smsNotification : false : false,
         };
     }
 
     async saveActiveOrderChanges() {
-        let activeOrder = this.state.activeOrder;
+        let activeOrder = this.getActiveOrder(this.state.activeOrder);
         
         const response = await fetch(this.state.activeOrder.orderID ? (settings.apiurl + '/Orders/' + this.state.activeOrder.orderID) : (settings.apiurl + '/Orders/'), {
             method: this.state.activeOrder.orderID ? 'PUT' : 'POST',
@@ -102,6 +104,7 @@ export class Order extends Component {
                 const data = await response.json();
                 this.setState({ activeOrder: this.getActiveOrder(data), successMessage: 'Данные успешно сохранены', errorMessage: null });
             }
+            this.populateOrderData();
         }
         else this.setState({ errorMessage: 'Произошла ошибка при сохранении', successMessage: null });
 
@@ -171,8 +174,9 @@ export class Order extends Component {
         });
     }
     changeActiveOrder(value, propertie) {
+        
         let changedOrder = this.state.activeOrder;
-        changedOrder[propertie] = value;
+        changedOrder[propertie] = value;        
         this.setState({ activeOrder: changedOrder});
     }
 
@@ -226,6 +230,18 @@ export class Order extends Component {
                                                     }}
                                                 >
                                                 </Input>
+
+                                            </FormGroup>
+                                            <FormGroup check>
+                                                <Input type="checkbox"
+                                                    checked={this.state.activeOrder ? this.state.activeOrder.smsNotification : false}
+                                                onChange={(ev) => {
+                                                    this.changeActiveOrder(ev.target.checked, 'smsNotification');
+                                                }}/>
+                                                {' '}
+                                                <Label check>
+                                                    Уведомлять по телефону
+                                                </Label>
                                             </FormGroup>
                                             <FormGroup>
                                                 <Label for="clientEmail">
@@ -240,6 +256,16 @@ export class Order extends Component {
                                                     }}
                                                 >
                                                 </Input>
+                                            </FormGroup>
+                                            <FormGroup check>
+                                                <Input type="checkbox" checked={this.state.activeOrder ? this.state.activeOrder.emailNotification : false}                                                    
+                                                    onChange={(ev) => {                                                        
+                                                        this.changeActiveOrder(ev.target.checked, 'emailNotification');
+                                                    }}/>
+                                                {' '}
+                                                <Label check>
+                                                    Уведомлять по email
+                                                </Label>
                                             </FormGroup>
                                         </CardBody>
                                     </Card>                                    
@@ -549,9 +575,19 @@ export class Order extends Component {
                         </Form>                        
                     </ModalBody>
                     <ModalFooter>
-                        {this.state.activeOrder ? this.state.activeOrder.orderID ? <Button color="danger" onClick={this.deleteActiveOrder}>
-                            Удалить
-                        </Button> : '' : ''}
+                        {this.state.activeOrder ? this.state.activeOrder.orderID ?
+                            <div>
+                                <Button className="pr-2" onClick={this.deleteActiveOrder}>
+                                    Отметить выполненным
+                                </Button>
+                                <Button className="pr-2" onClick={this.deleteActiveOrder}>
+                                    Передать в доставку
+                                </Button>
+                                <Button className="pr-2" color="danger" onClick={this.deleteActiveOrder}>
+                                    Удалить
+                                </Button>
+                            </div>
+                         : '' : ''}
                         {' '}
                         <Button color="secondary" onClick={this.saveActiveOrderChanges}>
                             Сохранить
