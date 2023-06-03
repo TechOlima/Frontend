@@ -32,8 +32,21 @@ export class Order extends Component {
       this.addStorageInOrder = this.addStorageInOrder.bind(this);      
       this.populateStorages = this.populateStorages.bind(this);
       this.standingAdress = this.standingAdress.bind(this);
-
+      this.orderChangeState = this.orderChangeState.bind(this);      
     }
+    async orderChangeState(newstate) {
+        let activeOrder = this.getActiveOrder(this.state.activeOrder);
+
+        const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID + '?state=' + newstate, {
+            method: 'PATCH'            
+        });
+        if (response.ok) {
+            let message = activeOrder.smsNotification === true || activeOrder.emailNotification === true ? "Клиенту отправлены уведомления." : "";
+            this.setState({ successMessage: 'Статус заказа изменен. ' + message, errorMessage: null });
+            this.populateOrderData();
+        }
+        else this.setState({ errorMessage: 'Произошла ошибка при изменении статуса заказа', successMessage: null });
+    }    
     async standingAdress() {
         const response = await fetch(settings.mkr_service_url + '/DadataAdress/ClearAddress?adress=' + this.state.activeOrder?.deliveryAddress);
         if (response.ok) {            
@@ -577,12 +590,16 @@ export class Order extends Component {
                     <ModalFooter>
                         {this.state.activeOrder ? this.state.activeOrder.orderID ?
                             <div>
-                                <Button onClick={this.deleteActiveOrder}>
-                                    Отметить выполненным
-                                </Button>{' '}
-                                <Button onClick={this.deleteActiveOrder}>
+                                {this.state.activeOrder.state !== 'В доставке' && this.state.activeOrder.state !== 'Выполнен' ?
+                                    <Button onClick={() => this.orderChangeState('В доставке')}>
                                     Передать в доставку
-                                </Button>{' '}
+                                </Button> : '' }
+                                {' '}
+                                {this.state.activeOrder.state !== 'Выполнен' ?
+                                    <Button onClick={() => this.orderChangeState('Выполнен')}>
+                                    Отметить выполненным
+                                </Button> : ''}
+                                {' '}
                                 <Button color="danger" onClick={this.deleteActiveOrder}>
                                     Удалить
                                 </Button>
