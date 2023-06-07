@@ -19,11 +19,13 @@ export class Supply extends Component {
             activeSupply: null,
             successMessage: null,
             errorMessage: null,
-            storageSuccessMessage: null,
-            storageErrorMessage: null,
-            productID: '',
-            purchasePrice: 0,
-            salePrice: 0
+            //переменные для добавления и удаления товара в поставку
+            newProductID: null,
+            newProductPrice: null,
+            newProductQuantity: null,
+            newProductSum: null,
+            newProductSuccessMessage: null,
+            newProductErrorMessage: null,
         };
         this.toggleModal = this.toggleModal.bind(this);
         this.editSupply = this.editSupply.bind(this);
@@ -31,11 +33,11 @@ export class Supply extends Component {
         this.changeActiveSupply = this.changeActiveSupply.bind(this);
         this.getActiveSupple = this.getActiveSupply.bind(this);
         this.saveActiveSupplyChanges = this.saveActiveSupplyChanges.bind(this);
-        this.deleteActiveSupply = this.deleteActiveSupply.bind(this);
-        this.addStorageInSupply = this.addStorageInSupply.bind(this);
-        this.deleteStorageFromSupply = this.deleteStorageFromSupply.bind(this);
+        this.deleteActiveSupply = this.deleteActiveSupply.bind(this);        
         this.populateProducts = this.populateProducts.bind(this);
         this.populateSuppliesData = this.populateSuppliesData.bind(this);
+        this.addProductInSupply = this.addProductInSupply.bind(this);
+        this.deleteProductFromSupply = this.deleteProductFromSupply.bind(this);
     }
     toggleModal() {
         let newmodal = !this.state.showModal;
@@ -50,7 +52,7 @@ export class Supply extends Component {
             receivingDate: supply ? supply.receivingDate ? supply.receivingDate : null : null,
             isReceived: supply ? supply.isReceived ? supply.isReceived : false : false,
             note: supply ? supply.note ? supply.note : "" : "",
-            storages: supply ? supply.storages ? supply.storages : [] : []
+            supplyProducts: supply ? supply.supplyProducts ? supply.supplyProducts : [] : []
         };
     }
 
@@ -88,48 +90,27 @@ export class Supply extends Component {
         }
         else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
     }
-    async addStorageInSupply() {
-        console.log(this.state.activeSupply);
-        let postStorage = {            
-            productID: this.state.productID,
+
+    async addProductInSupply() {
+        let productInSupply = {
+            productID: this.state.newProductID,
             supplyID: this.state.activeSupply.supplyID,
-            purchasePrice: this.state.purchasePrice,
-            salePrice: this.state.salePrice
+            quantity: this.state.newProductQuantity
         };
-        const response = await fetch(settings.apiurl + '/Storages/', {
+        const response = await fetch(settings.apiurl + '/Supply_Product/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
-            body: JSON.stringify(postStorage)
+            body: JSON.stringify(productInSupply)
         });
         if (response.ok) {
             const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
             const data = await response.json();
             this.setState({
-                storageSuccessMessage: 'Данные успешно сохранены',
-                storageErrorMessage: null,
-                activeSupply:
-                    this.getActiveSupply(data)
-            },
-                () => {
-                    this.populateSuppliesData();                    
-                });
-        }
-        else this.setState({ storageErrorMessage: 'Произошла ошибка при сохранении', storageSuccessMessage: null });
-    }
-
-    async deleteStorageFromSupply(storage) {
-        const response = await fetch(settings.apiurl + '/Storages/' + storage.storageID, {
-            method: 'DELETE',
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
-            const data = await response.json();
-            this.setState({
-                SuccessMessage: 'Данные успешно сохранены',
-                ErrorMessage: null,
+                newProductSuccessMessage: 'Данные успешно сохранены',
+                newProductErrorMessage: null,
                 activeSupply:
                     this.getActiveSupply(data)
             },
@@ -137,7 +118,27 @@ export class Supply extends Component {
                     this.populateSuppliesData();
                 });
         }
-        else this.setState({ storageErrorMessage: 'Произошла ошибка при сохранении', storageSuccessMessage: null });
+        else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
+    }
+
+    async deleteProductFromSupply(supply_ProductID) {
+        const response = await fetch(settings.apiurl + '/Supply_Product/' + supply_ProductID, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
+            const data = await response.json();
+            this.setState({
+                newProductSuccessMessage: 'Данные успешно удалены',
+                newProductErrorMessage: null,
+                activeSupply:
+                    this.getActiveSupply(data)
+            },
+                () => {
+                    this.populateSuppliesData();
+                });
+        }
+        else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
     }
 
     componentDidMount() {
@@ -245,18 +246,16 @@ export class Supply extends Component {
                                             <b>Товары</b>
                                         </CardHeader>
                                         <CardBody>
-                                            {this.state.storageSuccessMessage ?
+                                            {this.state.newProductSuccessMessage ?
                                                 <Alert color="success">
-                                                    {this.state.storageSuccessMessage}
+                                                    {this.state.newProductSuccessMessage}
                                                 </Alert>
                                                 : ''}
-                                            {this.state.storageErrorMessage ?
+                                            {this.state.newProductErrorMessage ?
                                                 <Alert color="danger">
-                                                    {this.state.storageErrorMessage}
+                                                    {this.state.newProductErrorMessage}
                                                 </Alert>
-                                                : ''}
-                                            {
-                                                this.state.activeSupply?.storages?.length > 0 ?
+                                                : ''}                                            
                                                     <Row>
                                                         <Col md={4}>
                                                             <Label>
@@ -265,24 +264,28 @@ export class Supply extends Component {
                                                         </Col>
                                                         <Col md={2}>
                                                             <Label>
-                                                                Цена покупки
+                                                                Цена
                                                             </Label>
                                                         </Col>
                                                         <Col md={2}>
                                                             <Label>
-                                                                Цена продажи
+                                                                Количество
                                                             </Label>
                                                         </Col>
-                                                    </Row> : ""
-                                            }
-                                            {this.state.activeSupply?.storages?.map(storage =>
-                                                <Row key={storage.storageID}>
+                                                        <Col md={2}>
+                                                            <Label>
+                                                                Сумма
+                                                            </Label>
+                                                        </Col>
+                                                    </Row> 
+                                            {this.state.activeSupply?.supplyProducts?.map(supplyProduct =>
+                                                <Row key={supplyProduct.supply_ProductID}>
                                                     <Col md={4}>
                                                         <Input
                                                             id="productName"
                                                             name="productName"
                                                             plaintext
-                                                            defaultValue={storage.productName}
+                                                            defaultValue={supplyProduct.productName}
                                                         />
                                                     </Col>
                                                     <Col md={2}>
@@ -290,22 +293,30 @@ export class Supply extends Component {
                                                             id="purchasePrice"
                                                             name="purchasePrice"
                                                             plaintext
-                                                            defaultValue={storage.purchasePrice}
+                                                            defaultValue={supplyProduct.purchasePrice}
                                                         />
                                                     </Col>
                                                     <Col md={2}>
                                                         <Input
-                                                            id="salePrice"
-                                                            name="salePrice"
+                                                            id="quantity"
+                                                            name="quantity"
                                                             plaintext
-                                                            defaultValue={storage.salePrice}
+                                                            defaultValue={supplyProduct.quantity}
+                                                        />
+                                                    </Col>
+                                                    <Col md={2}>
+                                                        <Input
+                                                            id="totalSum"
+                                                            name="totalSum"
+                                                            plaintext
+                                                            defaultValue={supplyProduct.totalSum}
                                                         />
                                                     </Col>
                                                     <Col md={2}>
                                                         <Button
                                                             color="danger"
                                                             size="sm"
-                                                            onClick={() => { this.deleteStorageFromSupply(storage) }}
+                                                            onClick={() => { this.deleteProductFromSupply(supplyProduct.supply_ProductID) }}
                                                         >
                                                             Удалить
                                                         </Button>
@@ -317,10 +328,15 @@ export class Supply extends Component {
                                                     <Input
                                                         id="productID"
                                                         name="productID"
-                                                        value={this.state.productID}
+                                                        value={this.state.newProductID ? this.state.newProductID : ''}
                                                         type='select'
                                                         onChange={(ev) => {
-                                                            this.setState({ productID: ev.target.value });
+                                                            let product = this.state.products.filter(i => String(i.productID) == String(ev.target.value))[0];
+                                                            let newProductPrice = product.purchasePrice;
+                                                            this.setState({
+                                                                newProductID: ev.target.value,
+                                                                newProductPrice: newProductPrice
+                                                            });
                                                         }}
                                                     >
                                                         <option disabled value={null}>
@@ -328,32 +344,44 @@ export class Supply extends Component {
                                                         </option>
                                                         {this.state.products.map(product =>
                                                             <option value={product.productID} key={product.productID}>
-                                                                {product.name}
+                                                                {product.name}-{product.purchasePrice} (р.)
                                                             </option>
                                                         )}
                                                     </Input>
                                                 </Col>
                                                 <Col md={2}>
                                                     <Input
-                                                        id="purchasePrice"
-                                                        name="purchasePricee"
-                                                        value={this.state.purchasePrice}
+                                                        id="newProductPrice"
+                                                        name="newProductPrice"
+                                                        defaultValue={this.state.newProductPrice ? this.state.newProductPrice : ''}
+                                                        type='number'
+                                                        plaintext
+                                                    >
+                                                    </Input>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <Input
+                                                        id="newProductQuantity"
+                                                        name="newProductQuantity"
+                                                        value={this.state.newProductQuantity ? this.state.newProductQuantity : ''}
                                                         type='number'
                                                         onChange={(ev) => {
-                                                            this.setState({ purchasePrice: ev.target.value });
+                                                            let newProductSum = parseFloat(ev.target.value) * parseFloat(this.state.newProductPrice);
+                                                            this.setState({
+                                                                newProductQuantity: ev.target.value,
+                                                                newProductSum: newProductSum
+                                                            });
                                                         }}
                                                     >
                                                     </Input>
                                                 </Col>
                                                 <Col md={2}>
                                                     <Input
-                                                        id="salePrice"
-                                                        name="salePrice"
-                                                        value={this.state.salePrice}
-                                                        type='number'
-                                                        onChange={(ev) => {
-                                                            this.setState({ salePrice: ev.target.value });
-                                                        }}
+                                                        id="newProductSum"
+                                                        name="newProductSum"
+                                                        defaultValue={this.state.newProductSum ? this.state.newProductSum : ''}
+                                                        plaintext
+                                                        type='number'                                                        
                                                     >
                                                     </Input>
                                                 </Col>
@@ -361,7 +389,7 @@ export class Supply extends Component {
                                                     <Button
                                                         color="primary"
                                                         size="sm"
-                                                        onClick={() => { this.addStorageInSupply() }}
+                                                        onClick={() => { this.addProductInSupply() }}
                                                     >
                                                         Добавить
                                                     </Button>

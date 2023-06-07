@@ -132,8 +132,8 @@ export class Product extends Component {
             is_Deleted: product ? product.is_Deleted : null,
             photos: product ? product.photos ? product.photos : [] : [],
             inserts: product ? product.inserts ? product.inserts : [] : [],
-            storageCount: product ? product.storageCount ? product.storageCount : "" : "",
-            vK_ID: product?.vK_ID ? product.vK_ID : ""
+            amounth: product ? product.amounth ? product.amounth : "" : "",
+            vK_ID: product?.vK_ID ? product.vK_ID : null
         };
     }
 
@@ -665,7 +665,7 @@ export class Product extends Component {
                   <td>{product.description}</td>
                   <td>{product.gendeType}</td>                  
                         <td>{product.size}</td>
-                        <td>{product.storageCount}</td>
+                        <td>{product.amounth}</td>
             </tr>
           )}
         </tbody>

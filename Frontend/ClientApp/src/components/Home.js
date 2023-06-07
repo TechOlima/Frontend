@@ -12,12 +12,10 @@ export class Home extends Component {
         this.state = {
             products: [],
             orders: [],
-            supplies: [],
-            storages: [],
+            supplies: [],            
             productsloading: true,
             ordersloading: true,
-            suppliesloading: true,
-            storagesloading: true,
+            suppliesloading: true            
         };        
     }
 
@@ -37,11 +35,7 @@ export class Home extends Component {
         //загружаем поставки
         response = await fetch(settings.apiurl + '/Supplies');
         data = await response.json();
-        this.setState({ supplies: data, suppliesloading: false });
-        //загружаем склад
-        response = await fetch(settings.apiurl + '/Storages');
-        data = await response.json();
-        this.setState({ storages: data, storagesloading: false });
+        this.setState({ supplies: data, suppliesloading: false });        
     }
 
   render() {
@@ -109,27 +103,7 @@ export class Home extends Component {
                             <NavLink tag={Link} to="/supply">Перейти</NavLink>
                         </Button>
                     </Card>
-                </Col>
-                <Col sm="6">
-                    <Card body>
-                        <CardTitle tag="h5">
-                            Склад
-                        </CardTitle>
-                        
-                            {this.state.storageloading ? <em>Загрузка...</em> : 
-                                <ul>
-                                    {this.state.storages.slice(0, 5).map(storage =>
-                                        <li key={storage.storageID}>
-                                            {storage.productName}
-                                        </li>
-                                    )}
-                                </ul>}
-                        
-                        <Button color="light">
-                            <NavLink tag={Link} to="/storage">Перейти</NavLink>
-                        </Button>
-                    </Card>
-                </Col>
+                </Col>                
             </Row>
             
       </div>

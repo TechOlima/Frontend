@@ -7,5 +7,5 @@
   "group_id": "220761511",
   "version": "5.131",
   "mkr_service_url": "https://mkr-v3-20230528112307.azurewebsites.net/api",
-  "apiurl": "https://webapi-v4-20230603172558.azurewebsites.net/api"
+  "apiurl": "https://localhost:7184/api"
 }

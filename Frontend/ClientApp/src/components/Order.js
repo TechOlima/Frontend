@@ -11,6 +11,7 @@ export class Order extends Component {
       this.state = {
           orders: [],
           storages: [],
+          products: [],
           loading: true,
           activeTab: "1",
           searchPattern: "",
@@ -18,9 +19,13 @@ export class Order extends Component {
           activeOrder: null,
           successMessage: null,
           errorMessage: null,
-          storageSuccessMessage: null,
-          storageErrorMessage: null,
-          newStorageID: ''
+          //переменные для добавления товаров в заказ
+          newProductID: null,
+          newProductPrice: null,
+          newProductQuantity: null,
+          newProductSum: null,
+          newProductSuccessMessage: null,
+          newProductErrorMessage: null,
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editOrder = this.editOrder.bind(this);
@@ -28,12 +33,65 @@ export class Order extends Component {
       this.changeActiveOrder = this.changeActiveOrder.bind(this);
       this.getActiveOrder = this.getActiveOrder.bind(this);
       this.saveActiveOrderChanges = this.saveActiveOrderChanges.bind(this);
-      this.deleteActiveOrder = this.deleteActiveOrder.bind(this);
-      this.addStorageInOrder = this.addStorageInOrder.bind(this);      
-      this.populateStorages = this.populateStorages.bind(this);
+      this.deleteActiveOrder = this.deleteActiveOrder.bind(this);      
       this.standingAdress = this.standingAdress.bind(this);
-      this.orderChangeState = this.orderChangeState.bind(this);      
+      this.orderChangeState = this.orderChangeState.bind(this);
+      this.populateProductData = this.populateProductData.bind(this);      
+      this.addProductInOrder = this.addProductInOrder.bind(this);
+      this.deleteProductFromOrder = this.deleteProductFromOrder.bind(this);
     }
+    async deleteProductFromOrder(order_ProductID) {
+        const response = await fetch(settings.apiurl + '/Order_Product/' + order_ProductID, {
+            method: 'DELETE',
+        });
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
+            const data = await response.json();
+            this.setState({
+                newProductSuccessMessage: 'Данные успешно удалены',
+                newProductErrorMessage: null,
+                activeOrder:
+                    this.getActiveOrder(data)
+            },
+                () => {
+                    this.populateOrderData();
+                });
+        }
+        else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
+    }
+
+    async addProductInOrder() {
+        
+        let productInOrder = {
+            productID: this.state.newProductID,
+            orderID: this.state.activeOrder.orderID,
+            quantity: this.state.newProductQuantity
+        };
+        const response = await fetch(settings.apiurl + '/Order_Product/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
+            body: JSON.stringify(productInOrder)
+        });
+        if (response.ok) {
+            const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
+            const data = await response.json();
+            this.setState({
+                newProductSuccessMessage: 'Данные успешно сохранены',
+                newProductErrorMessage: null,
+                activeOrder:
+                    this.getActiveOrder(data)
+            },
+                () => {
+                    this.populateOrderData();
+                });
+        }
+        else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
+        
+    }
+
     async orderChangeState(newstate) {
         let activeOrder = this.getActiveOrder(this.state.activeOrder);
 
@@ -83,7 +141,7 @@ export class Order extends Component {
             deliveryDate: order ? order.deliveryDate ? order.deliveryDate : "" : "",
             orderDate: order ? order.orderDate ? order.orderDate : "" : "",
             note: order ? order.note ? order.note : "" : "",
-            storages: order ? order.storages ? order.storages : [] : [],
+            orderProducts: order ? order.orderProducts ? order.orderProducts : [] : [],
             //стандартизированный адрес
             deliveryAddressStd: order?.deliveryAddressStd ? order.deliveryAddressStd : "",
             streetWithType: order?.streetWithType ? order.streetWithType : "",
@@ -133,45 +191,12 @@ export class Order extends Component {
         }
         else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
     }
-    async addStorageInOrder(selStorage) {
-        let selectedStorage = selStorage ? selStorage : this.state.storages.filter(i => String(i.storageID) === String(this.state.newStorageID))[0];
 
-        let putStorage = {
-            storageID: selectedStorage.storageID,
-            productID: selectedStorage.productID,
-            orderID: selStorage ? null : this.state.activeOrder.orderID,
-            supplyID: selectedStorage.supplyID,
-            purchasePrice: selectedStorage.purchasePrice,
-            salePrice: selectedStorage.salePrice
-        };
-        const response = await fetch(settings.apiurl + '/Storages/' + (selStorage ? selStorage.storageID : this.state.newStorageID), {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json;',
-                'accept': 'text/plain'
-            },
-            body: JSON.stringify(putStorage)
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
-            const data = await response.json();
-            this.setState({
-                storageSuccessMessage: 'Данные успешно сохранены',
-                storageErrorMessage: null,
-                activeOrder:
-                    this.getActiveOrder(data)
-            },
-                () => {
-                    this.populateStorages();
-                    this.populateOrderData();
-                });
-        }
-        else this.setState({ storageErrorMessage: 'Произошла ошибка при сохранении', storageSuccessMessage: null });
-    } 
+    
 
     componentDidMount() {
         this.populateOrderData();
-        this.populateStorages();
+        this.populateProductData();
     }
     async editOrder(orderID) {
         const response = await fetch(settings.apiurl + '/Orders/' + orderID);
@@ -483,20 +508,20 @@ export class Order extends Component {
                                             <b>Товары</b>
                                         </CardHeader>
                                         <CardBody>
-                                            {this.state.storageSuccessMessage ?
+                                            {this.state.newProductSuccessMessage ?
                                                 <Alert color="success">
-                                                    {this.state.storageSuccessMessage}
+                                                    {this.state.newProductSuccessMessage}
                                                 </Alert>
                                                 : ''}
-                                            {this.state.storageErrorMessage ?
+                                            {this.state.newProductErrorMessage ?
                                                 <Alert color="danger">
-                                                    {this.state.storageErrorMessage}
+                                                    {this.state.newProductErrorMessage}
                                                 </Alert>
                                                 : ''}
                                             {
-                                                this.state.activeOrder?.storages?.length > 0 ?
+                                                this.state.activeOrder?.orderProducts?.length > 0 ?
                                                     <Row>
-                                                        <Col md={6}>
+                                                        <Col md={4}>
                                                             <Label>
                                                                 Товар
                                                             </Label>
@@ -506,31 +531,58 @@ export class Order extends Component {
                                                                 Цена
                                                             </Label>
                                                         </Col>
+                                                        <Col md={2}>
+                                                            <Label>
+                                                                Количество
+                                                            </Label>
+                                                        </Col>
+                                                        <Col md={2}>
+                                                            <Label>
+                                                                Сумма
+                                                            </Label>
+                                                        </Col>
                                                     </Row> : ""
                                             }
-                                            {this.state.activeOrder?.storages?.map(storage =>
-                                                <Row key={storage.storageID}>
-                                                    <Col md={6}>
+                                            {this.state.activeOrder?.orderProducts?.map(orderProduct =>
+                                                <Row key={orderProduct.order_ProductID}>
+                                                    <Col md={4}>
                                                         <Input
-                                                            id="storageName"
-                                                            name="storageName"
+                                                            id="orderProductName"
+                                                            name="orderProductName"
                                                             plaintext
-                                                            defaultValue={storage.productName}
+                                                            defaultValue={orderProduct.productName}
                                                         />
                                                     </Col>
                                                     <Col md={2}>
                                                         <Input
-                                                            id="storagePrice"
-                                                            name="storagePrice"
+                                                            id="orderProductPrice"
+                                                            name="orderProductPrice"
                                                             plaintext
-                                                            defaultValue={storage.salePrice}
+                                                            defaultValue={orderProduct.salePrice}
+                                                        />
+                                                    </Col>
+                                                    <Col md={2}>
+                                                        <Input
+                                                            id="orderProductquantity"
+                                                            name="orderProductquantity"
+                                                            plaintext
+                                                            defaultValue={orderProduct.quantity}
+                                                        />
+                                                    </Col>
+                                                    <Col md={2}>
+                                                        <Input
+                                                            id="orderProducttotalSum"
+                                                            name="orderProducttotalSum"
+                                                            plaintext
+                                                            defaultValue={orderProduct.totalSum
+}
                                                         />
                                                     </Col>
                                                     <Col md={2}>
                                                         <Button
                                                             color="danger"
                                                             size="sm"
-                                                            onClick={() => { this.addStorageInOrder(storage) }}
+                                                            onClick={() => { this.deleteProductFromOrder(orderProduct.order_ProductID) }}
                                                         >
                                                             Удалить
                                                         </Button>
@@ -538,31 +590,62 @@ export class Order extends Component {
                                                 </Row>
                                             )}
                                             <Row className="mt-2">
-                                                <Col md={10}>
+                                                <Col md={6}>
                                                     <Input
-                                                        id="newStorageID"
-                                                        name="newStorageID"
-                                                        value={this.state.newStorageID}
+                                                        id="newProductID"
+                                                        name="newProductID"
+                                                        value={this.state.newProductID ? this.state.newProductID : ''}
                                                         type='select'
-                                                        onChange={(ev) => {                                                            
-                                                            this.setState({ newStorageID: ev.target.value });
+                                                        onChange={(ev) => {
+                                                            let product = this.state.products.filter(i => String(i.productID) == String(ev.target.value))[0];
+                                                            let newProductPrice = product.salePrice;
+                                                            //console.log(newProductPrice);
+                                                            this.setState({
+                                                                newProductID: ev.target.value,
+                                                                newProductPrice: product.salePrice
+                                                            });
                                                         }}
                                                     >
                                                         <option value={null}>
                                                             Не выбран
                                                         </option>
-                                                        {this.state.storages.map(storage =>
-                                                            <option value={storage.storageID} key={storage.storageID}>
-                                                                {storage.productName} {storage.salePrice} руб.
+                                                        {this.state.products.map(product =>
+                                                            <option value={product.productID} key={product.productID}>
+                                                                {product.name}-{product.salePrice} руб.
                                                             </option>
                                                         )}
                                                     </Input>
-                                                </Col>                                                
+                                                </Col>
+                                                <Col md={2}>
+                                                    <Input
+                                                        id="newProductQuantity"
+                                                        name="newProductQuantity"
+                                                        value={this.state.newProductQuantity ? this.state.newProductQuantity : ''}
+                                                        onChange={(ev) => {
+                                                            let newProductSum = parseFloat(ev.target.value) * parseFloat(this.state.newProductPrice);                                                            
+                                                            this.setState({
+                                                                newProductQuantity: ev.target.value,
+                                                                newProductSum: newProductSum
+                                                            });                                                            
+                                                        }}
+                                                        type="number"
+                                                    >                                                        
+                                                    </Input>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <Input
+                                                        id="newProductID"
+                                                        name="newProductID"
+                                                        defaultValue={this.state.newProductSum ? this.state.newProductSum : ''}
+                                                        plaintext
+                                                    >
+                                                    </Input>
+                                                </Col>
                                                 <Col md={2}>
                                                     <Button
                                                         color="primary"
                                                         size="sm"
-                                                        onClick={() => { this.addStorageInOrder(null) }}
+                                                        onClick={() => { this.addProductInOrder() }}
                                                     >
                                                         Добавить
                                                     </Button>
@@ -648,9 +731,9 @@ export class Order extends Component {
                         <td>{order.clientName}</td>
                         <td>{order.clientPhone}</td>
                         <td>{order.deliveryAddress}</td>
-                        <td><ul>{order.storages?.map(
-                            storage =>
-                                <li key={storage.storageID}>{storage.productName}</li>
+                        <td><ul>{order.orderProducts?.map(
+                            orderProduct =>
+                                <li key={orderProduct.order_ProductID}>{orderProduct.productName + '-' + orderProduct.quantity}</li>
                         )}</ul></td>
                         <td>{order.totalSum}</td>
                         <td>{order.note}</td>
@@ -725,9 +808,9 @@ export class Order extends Component {
         const data = await response.json();
         this.setState({ orders: data, loading: false });
     }
-    async populateStorages() {
-        const response = await fetch(settings.apiurl + '/Storages');
+    async populateProductData() {
+        const response = await fetch(settings.apiurl + '/Products?SearchPattern=' + this.state.searchPattern);
         const data = await response.json();
-        this.setState({ storages: data.filter(i => !i.orderID) });
+        this.setState({ products: data, loading: false });
     }
 }
