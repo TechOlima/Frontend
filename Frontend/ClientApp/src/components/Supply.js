@@ -26,6 +26,8 @@ export class Supply extends Component {
             newProductSum: null,
             newProductSuccessMessage: null,
             newProductErrorMessage: null,
+            autorize: false,
+            token: null
         };
         this.toggleModal = this.toggleModal.bind(this);
         this.editSupply = this.editSupply.bind(this);
@@ -38,6 +40,10 @@ export class Supply extends Component {
         this.populateSuppliesData = this.populateSuppliesData.bind(this);
         this.addProductInSupply = this.addProductInSupply.bind(this);
         this.deleteProductFromSupply = this.deleteProductFromSupply.bind(this);
+    }
+    getCookie(name) {
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
     }
     toggleModal() {
         let newmodal = !this.state.showModal;
@@ -62,6 +68,7 @@ export class Supply extends Component {
         const response = await fetch(this.state.activeSupply.supplyID ? (settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID) : (settings.apiurl + '/Supplies/'), {
             method: this.state.activeSupply.supplyID ? 'PUT' : 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -82,6 +89,11 @@ export class Supply extends Component {
     async deleteActiveSupply() {
         const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID, {
             method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             this.setState({ activeSupply: this.getActiveSupply(), successMessage: 'Данные успешно удалены', errorMessage: null }, () => {
@@ -100,6 +112,7 @@ export class Supply extends Component {
         const response = await fetch(settings.apiurl + '/Supply_Product/', {
             method: 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -124,6 +137,11 @@ export class Supply extends Component {
     async deleteProductFromSupply(supply_ProductID) {
         const response = await fetch(settings.apiurl + '/Supply_Product/' + supply_ProductID, {
             method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
@@ -144,6 +162,7 @@ export class Supply extends Component {
     componentDidMount() {
         this.populateSuppliesData();
         this.populateProducts();
+        if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });
     }
     async editSupply(supplyID) {
         const response = await fetch(settings.apiurl + '/Supplies/' + supplyID);
@@ -331,7 +350,7 @@ export class Supply extends Component {
                                                         value={this.state.newProductID ? this.state.newProductID : ''}
                                                         type='select'
                                                         onChange={(ev) => {
-                                                            let product = this.state.products.filter(i => String(i.productID) == String(ev.target.value))[0];
+                                                            let product = this.state.products.filter(i => String(i.productID) === String(ev.target.value))[0];
                                                             let newProductPrice = product.purchasePrice;
                                                             this.setState({
                                                                 newProductID: ev.target.value,
@@ -432,13 +451,14 @@ export class Supply extends Component {
                     {supplies?.map(supply =>
                         <tr key={supply.supplyID}>
                             <td>
-                                <Button
-                                    color="primary"
-                                    size="sm"
-                                    onClick={() => { this.editSupply(supply.supplyID) }}
-                                >
-                                    Изменить
-                                </Button>
+                                {this.state.autorize ?
+                                    <Button
+                                        color="primary"
+                                        size="sm"
+                                        onClick={() => { this.editSupply(supply.supplyID) }}
+                                    >
+                                        Изменить
+                                    </Button> : ''}
                             </td>
                             <td>{supply.productCount}</td>
                             <td>{supply.totalSum}</td>
@@ -469,12 +489,16 @@ export class Supply extends Component {
         return (
             <div>
                 <h1 id="tabelLabel" >Поставки</h1>
-                <div style={{ textAlign: 'right' }}>
-                    <button className="btn btn-primary" onClick={() => {
-                        this.setState({ activeSupply: this.getActiveSupply(), successMessage: null, errorMessage: null }, () => {
-                            this.toggleModal();
-                        });
-                    }}>Создать</button></div>
+                {!this.state.autorize ? <Alert color="info">
+                    Для выполнения операций необходимо авторизоваться. Нажмите кнопку Войти.
+                </Alert> : ''}
+                {this.state.autorize ?
+                    <div style={{ textAlign: 'right' }}>
+                        <button className="btn btn-primary" onClick={() => {
+                            this.setState({ activeSupply: this.getActiveSupply(), successMessage: null, errorMessage: null }, () => {
+                                this.toggleModal();
+                            });
+                        }}>Создать</button></div> : ''}
                 <Row className="mt-2">
                     <Col sm="6">
                         <FormGroup>

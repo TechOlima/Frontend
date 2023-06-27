@@ -15,6 +15,10 @@ export class NavMenu extends Component {
       collapsed: true
     };
   }
+    getCookie(name) {        
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
 
   toggleNavbar () {
     this.setState({
@@ -33,7 +37,7 @@ export class NavMenu extends Component {
       return (
       <header>
         <Navbar className="navbar-expand-sm navbar-toggleable-sm ng-white border-bottom box-shadow mb-3" container light>
-          <NavbarBrand tag={Link} to="/">Olima v5</NavbarBrand>
+          <NavbarBrand tag={Link} to="/">Olima v7-identity</NavbarBrand>
           <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
           <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
             <ul className="navbar-nav flex-grow">
@@ -51,7 +55,11 @@ export class NavMenu extends Component {
                           </NavItem>
                 <NavItem>
                     <NavLink tag={Link} className="text-dark" to="/vk">VK</NavLink>
-                </NavItem>
+                          </NavItem>
+                          <NavItem>
+                              <NavLink tag={Link} className="text-dark" disabled={this.getCookie("token") ? true : false } to="/login">{
+                                  this.getCookie("token") ? <b>Авторизован</b> : "Войти"}</NavLink>
+                          </NavItem>
                 <UncontrolledButtonDropdown>
                     <DropdownToggle nav caret>
                         Справочники

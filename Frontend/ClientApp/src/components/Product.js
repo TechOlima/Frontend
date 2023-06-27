@@ -29,6 +29,8 @@ export class Product extends Component {
           selectedImage: null,
           imageSuccessMessage: null,
           imageErrorMessage: null,
+          autorize: false,
+          token: null
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editProduct = this.editProduct.bind(this);
@@ -43,7 +45,11 @@ export class Product extends Component {
       this.MakeCoverImage = this.MakeCoverImage.bind(this);
       this.DeleteImage = this.DeleteImage.bind(this);
     }
-    
+    getCookie(name) {
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+
     async UploadImage() {
         let newPhoto = {
             productID: this.state.activeProduct.productID,
@@ -53,6 +59,7 @@ export class Product extends Component {
         const response = await fetch(settings.apiurl + '/Photos/', {
             method: 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -81,6 +88,7 @@ export class Product extends Component {
         const response = await fetch(settings.apiurl + '/Photos/' + photo.photoID, {
             method: 'PUT',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -101,6 +109,11 @@ export class Product extends Component {
     async DeleteImage(photoID) {
         const response = await fetch(settings.apiurl + '/Photos/' + photoID, {
             method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });        
         if (response.ok) {
             const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID);
@@ -145,6 +158,7 @@ export class Product extends Component {
         const response = await fetch(this.state.activeProduct.productID ? (settings.apiurl + '/Products/' + this.state.activeProduct.productID) : (settings.apiurl + '/Products/'), {
             method: this.state.activeProduct.productID ? 'PUT' : 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -164,7 +178,12 @@ export class Product extends Component {
     }
     async deleteActiveProduct() {        
         const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID, {
-            method: 'DELETE',            
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             this.setState({ activeProduct: this.getActiveProduct(), successMessage: 'Данные успешно удалены', errorMessage: null }, () => {
@@ -182,6 +201,7 @@ export class Product extends Component {
         const response = await fetch(settings.apiurl + '/Inserts/', {
             method: 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -196,7 +216,12 @@ export class Product extends Component {
     }
     async deleteInsert(insertID) {
         const response = await fetch(settings.apiurl + '/Inserts/' + insertID, {
-            method: 'DELETE'            
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            }
         });
         if (response.ok) {
             const response = await fetch(settings.apiurl + '/Products/' + this.state.activeProduct.productID);
@@ -212,6 +237,7 @@ export class Product extends Component {
       this.populateMaterialTypeData();
       this.populateGenderTypeData();
       this.populateStoneTypeData();
+      if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });      
     }
     async editProduct(productID) {
         const response = await fetch(settings.apiurl + '/Products/' + productID);
@@ -648,14 +674,15 @@ export class Product extends Component {
         <tbody>
                 {products.map(product =>
               <tr key={product.productID}>
-                  <td>
-                      <Button
-                                color="primary"
-                                size="sm"
-                                onClick={() => { this.editProduct(product.productID) }}
-                      >
-                          Изменить
-                      </Button>  
+                        <td>
+                            {this.state.autorize ?
+                                <Button
+                                    color="primary"
+                                    size="sm"
+                                    onClick={() => { this.editProduct(product.productID) }}
+                                >
+                                    Изменить
+                                </Button> : ''}
                   </td>
                   <td>{product.name}</td>
                   <td>{product.equipment}</td>
@@ -686,14 +713,18 @@ export class Product extends Component {
 
     return (
       <div>
-            <h1 id="tabelLabel" >Товары</h1>            
-            <div style={{ textAlign: 'right' }}>
-                <button className="btn btn-primary" onClick={() =>
-                {
-                    this.setState({ activeProduct: this.getActiveProduct(), successMessage: null, errorMessage: null }, () => {
-                        this.toggleModal();
-                    });
-            }}>Создать</button></div>
+            <h1 id="tabelLabel" >Товары</h1>
+            {!this.state.autorize ? <Alert color="info">
+                Для выполнения операций необходимо авторизоваться. Нажмите кнопку Войти.
+            </Alert> : ''}
+            {this.state.autorize ?
+                <div style={{ textAlign: 'right' }}>
+                    <button className="btn btn-primary" onClick={() => {
+                        this.setState({ activeProduct: this.getActiveProduct(), successMessage: null, errorMessage: null }, () => {
+                            this.toggleModal();
+                        });
+                    }}>Создать</button></div> : ''}
+
             <div className="row gy-1">
                 <Row className="gy-2"><Col sm="12"><Input onKeyDown={(ev) => {
                     if (ev.keyCode === 13) {

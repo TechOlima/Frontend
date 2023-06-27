@@ -8,6 +8,7 @@ import { Supply } from "./components/Supply";
 import { Photo } from "./components/Photo";
 import { StoneType } from "./components/StoneType";
 import { VK } from "./components/VK";
+import { Login } from "./components/Login";
 
 const AppRoutes = [
   {
@@ -49,6 +50,14 @@ const AppRoutes = [
     {
         path: '/vk',
         element: <VK />
+    },
+    {
+        path: '/login',
+        element: <Login />
+    },
+    {
+        path: '/home',
+        element: <Home />
     }
 ];
 

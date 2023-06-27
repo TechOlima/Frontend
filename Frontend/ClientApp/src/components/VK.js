@@ -21,6 +21,8 @@ export class VK extends Component {
           productsSuccessMessage: null,
           productsErrorMessage: null,
           vkError: null,
+          autorize: false,
+          token: null
       };
       this.renderProductTable = this.renderProductTable.bind(this);
       this.renderPhotosTable = this.renderPhotosTable.bind(this);
@@ -30,6 +32,10 @@ export class VK extends Component {
       this.uploadPhotoVK = this.uploadPhotoVK.bind(this);
       this.productAddMarket = this.productAddMarket.bind(this);
       this.productEditMarket = this.productEditMarket.bind(this);
+    }
+    getCookie(name) {
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
     }
     //добавление товаров в ВК
     async productAddMarket(product) {
@@ -64,6 +70,7 @@ export class VK extends Component {
             const responseProducts = await fetch(settings.apiurl + '/Products/' + activeProduct.productID, {
                 method: 'PUT',
                 headers: {
+                    'Authorization': 'Bearer ' + this.state.token,
                     'Content-Type': 'application/json;',
                     'accept': 'text/plain'
                 },
@@ -146,6 +153,7 @@ export class VK extends Component {
                 const response = await fetch(settings.apiurl + '/Photos/' + photo.photoID, {
                     method: 'PUT',
                     headers: {
+                        'Authorization': 'Bearer ' + this.state.token,
                         'Content-Type': 'application/json;',
                         'accept': 'text/plain'
                     },
@@ -216,7 +224,8 @@ export class VK extends Component {
           this.setState({ code: code });
           //запрашиваем токен если его нет
           if (this.state.accessToken === null) this.getToken(code);
-      }      
+        }
+        if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });
     }
     renderPhotosTable(photos) {
         return (<div>
@@ -314,8 +323,11 @@ export class VK extends Component {
     return (
       <div>
             <h1 id="tabelLabel" >Передача данных в ВК</h1>
+            {!this.state.autorize ? <Alert color="info">
+                Для выполнения операций необходимо авторизоваться в системе. Нажмите кнопку Войти.
+            </Alert> : ''}
             {
-                !this.state.accessToken || !this.state.code ?
+                this.state.autorize && (!this.state.accessToken || !this.state.code) ?
                     <div>
                         {this.state.vkError ? <Alert color='danger'>{ this.state.vkError }</Alert> : ''}
                         <h4 id="tabelLabel" >Для взаимодействия с ВК необходимо авторизоваться </h4>

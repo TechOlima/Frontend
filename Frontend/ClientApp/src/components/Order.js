@@ -26,6 +26,8 @@ export class Order extends Component {
           newProductSum: null,
           newProductSuccessMessage: null,
           newProductErrorMessage: null,
+          autorize: false,
+          token: null
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editOrder = this.editOrder.bind(this);
@@ -40,9 +42,18 @@ export class Order extends Component {
       this.addProductInOrder = this.addProductInOrder.bind(this);
       this.deleteProductFromOrder = this.deleteProductFromOrder.bind(this);
     }
+    getCookie(name) {
+        let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+        return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
     async deleteProductFromOrder(order_ProductID) {
         const response = await fetch(settings.apiurl + '/Order_Product/' + order_ProductID, {
             method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
@@ -70,6 +81,7 @@ export class Order extends Component {
         const response = await fetch(settings.apiurl + '/Order_Product/', {
             method: 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -96,7 +108,12 @@ export class Order extends Component {
         let activeOrder = this.getActiveOrder(this.state.activeOrder);
 
         const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID + '?state=' + newstate, {
-            method: 'PATCH'            
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             let message = activeOrder.smsNotification === true || activeOrder.emailNotification === true ? "Клиенту отправлены уведомления." : "";
@@ -162,6 +179,7 @@ export class Order extends Component {
         const response = await fetch(this.state.activeOrder.orderID ? (settings.apiurl + '/Orders/' + this.state.activeOrder.orderID) : (settings.apiurl + '/Orders/'), {
             method: this.state.activeOrder.orderID ? 'PUT' : 'POST',
             headers: {
+                'Authorization': 'Bearer ' + this.state.token,
                 'Content-Type': 'application/json;',
                 'accept': 'text/plain'
             },
@@ -183,6 +201,11 @@ export class Order extends Component {
     async deleteActiveOrder() {
         const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID, {
             method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + this.state.token,
+                'Content-Type': 'application/json;',
+                'accept': 'text/plain'
+            },
         });
         if (response.ok) {
             this.setState({ activeOrder: this.getActiveOrder(), successMessage: 'Данные успешно удалены', errorMessage: null }, () => {
@@ -197,6 +220,7 @@ export class Order extends Component {
     componentDidMount() {
         this.populateOrderData();
         this.populateProductData();
+        if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });
     }
     async editOrder(orderID) {
         const response = await fetch(settings.apiurl + '/Orders/' + orderID);
@@ -597,8 +621,8 @@ export class Order extends Component {
                                                         value={this.state.newProductID ? this.state.newProductID : ''}
                                                         type='select'
                                                         onChange={(ev) => {
-                                                            let product = this.state.products.filter(i => String(i.productID) == String(ev.target.value))[0];
-                                                            let newProductPrice = product.salePrice;
+                                                            let product = this.state.products.filter(i => String(i.productID) === String(ev.target.value))[0];
+                                                            //let newProductPrice = product.salePrice;
                                                             //console.log(newProductPrice);
                                                             this.setState({
                                                                 newProductID: ev.target.value,
@@ -717,14 +741,15 @@ export class Order extends Component {
         <tbody>
                 { orders?.map(order =>
                     <tr key={order.orderID}>
-                  <td>
-                      <Button
-                          color="primary"
-                                size="sm"
-                                onClick={() => { this.editOrder(order.orderID) }}
-                      >
-                          Изменить
-                      </Button>  
+                        <td>
+                            {this.state.autorize ?
+                                <Button
+                                    color="primary"
+                                    size="sm"
+                                    onClick={() => { this.editOrder(order.orderID) }}
+                                >
+                                    Изменить
+                                </Button> : ''}
                         </td>
                         <td>{order.orderID}</td>
                         <td>{order.state}</td>
@@ -760,12 +785,16 @@ export class Order extends Component {
       return (
           <div>
               <h1 id="tabelLabel" >Заказы</h1>
-              <div style={{ textAlign: 'right' }}>
-                  <button className="btn btn-primary" onClick={() => {
-                      this.setState({ activeOrder: this.getActiveOrder(), successMessage: null, errorMessage: null }, () => {
-                          this.toggleModal();
-                      });
-                  }}>Создать</button></div>
+              {!this.state.autorize ? <Alert color="info">
+                  Для выполнения операций необходимо авторизоваться. Нажмите кнопку Войти.
+              </Alert> : ''}
+              {this.state.autorize ?
+                  <div style={{ textAlign: 'right' }}>
+                      <button className="btn btn-primary" onClick={() => {
+                          this.setState({ activeOrder: this.getActiveOrder(), successMessage: null, errorMessage: null }, () => {
+                              this.toggleModal();
+                          });
+                      }}>Создать</button></div> : ''}
               <div className="row gy-1">
                   <Row className="gy-2"><Col sm="12"><Input onKeyDown={(ev) => {
                       if (ev.keyCode === 13) {

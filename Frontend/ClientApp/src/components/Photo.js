@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import {
+    CardImg
+} from 'reactstrap';
 import settings from './settings.json';
 
 export class Photo extends Component {
@@ -18,7 +21,7 @@ export class Photo extends Component {
       <table className='table table-striped' aria-labelledby="tabelLabel">
         <thead>
           <tr>            
-            <th>Наименование товара</th>
+            <th>Идентификатор товара</th>
             <th>Фотография</th>
             <th>Url</th>            
           </tr>
@@ -26,8 +29,11 @@ export class Photo extends Component {
         <tbody>
                 {photos.map(photo =>
                     <tr key={photo.photoID}>
-                        <td>{photo.product.name}</td>
-                        <td>{photo.photoUrl}</td>
+                        <td>{photo.productID}</td>
+                        <td><div style={{ width: 100 }}><CardImg
+                            
+                            src={photo.photoUrl ? photo.photoUrl : ''}
+                        /></div></td>
                         <td>{photo.photoUrl}</td>
             </tr>
           )}
