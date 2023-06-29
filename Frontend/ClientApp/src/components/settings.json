@@ -7,6 +7,6 @@
   "group_id": "220761511",
   "version": "5.131",
   "mkr_service_url": "https://mkr-v3-20230528112307.azurewebsites.net/api",
-  "apiurl": "https://localhost:7184/api",
-  "identityapiurl": "https://localhost:7208/api"
+  "apiurl": "https://webapi-v7-20230629132125.azurewebsites.net/api",
+  "identityapiurl": "https://identityservice-v1-20230629135613.azurewebsites.net/api"
 }
