@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Button, Input, Row, Nav, NavItem, NavLink, TabContent, TabPane, Col, Modal, ModalBody, ModalHeader, ModalFooter, Form, FormGroup, Label } from 'reactstrap';
-import { Card, CardHeader, CardBody, Alert } from 'reactstrap';
+import { Card, CardHeader, CardBody, Alert, FormFeedback } from 'reactstrap';
 import settings from './settings.json';
+import MaskedInput from 'react-maskedinput'
 
 export class Order extends Component {
     static displayName = Order.name;
@@ -27,7 +28,8 @@ export class Order extends Component {
           newProductSuccessMessage: null,
           newProductErrorMessage: null,
           autorize: false,
-          token: null
+          token: null,
+          incorrectEmail: false
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editOrder = this.editOrder.bind(this);
@@ -221,6 +223,7 @@ export class Order extends Component {
         this.populateOrderData();
         this.populateProductData();
         if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });
+        //$('#clientPhone').mask('+7 (999) 999-99-99');
     }
     async editOrder(orderID) {
         const response = await fetch(settings.apiurl + '/Orders/' + orderID);
@@ -239,7 +242,12 @@ export class Order extends Component {
         
         let changedOrder = this.state.activeOrder;
         changedOrder[propertie] = value;        
-        this.setState({ activeOrder: changedOrder});
+        this.setState({ activeOrder: changedOrder });
+        if (propertie === 'clientEmail') {
+            //let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            let re = /^[ ]*([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})[ ]*$/i;
+            this.setState({ incorrectEmail: !re.test(value) });
+        }
     }
 
     renderModal() {
@@ -283,16 +291,17 @@ export class Order extends Component {
                                                 <Label for="clientPhone">
                                                     Телефон
                                                 </Label>
-                                                <Input
+                                                <MaskedInput autoComplete='off'
+                                                    className="form-control"
+                                                    mask="+7 (111)-111-11-11"
                                                     id="clientPhone"
                                                     name="clientPhone"
+                                                    size="20"
                                                     value={this.state.activeOrder ? this.state.activeOrder.clientPhone : ''}
                                                     onChange={(ev) => {
                                                         this.changeActiveOrder(ev.target.value, 'clientPhone');
                                                     }}
-                                                >
-                                                </Input>
-
+                                                />
                                             </FormGroup>
                                             <FormGroup check>
                                                 <Input type="checkbox"
@@ -310,14 +319,22 @@ export class Order extends Component {
                                                     Email
                                                 </Label>
                                                 <Input
+                                                    invalid={this.state.incorrectEmail}
                                                     id="clientEmail"
                                                     name="clientEmail"
+                                                    type="email"
                                                     value={this.state.activeOrder ? this.state.activeOrder.clientEmail : ''}
                                                     onChange={(ev) => {
                                                         this.changeActiveOrder(ev.target.value, 'clientEmail');
                                                     }}
                                                 >
                                                 </Input>
+                                                {
+                                                    this.state.incorrectEmail ?
+                                                        <FormFeedback>
+                                                            Некорректный адрес электронной почты!
+                                                        </FormFeedback> : ''
+                                                }                                                
                                             </FormGroup>
                                             <FormGroup check>
                                                 <Input type="checkbox" checked={this.state.activeOrder ? this.state.activeOrder.emailNotification : false}                                                    
