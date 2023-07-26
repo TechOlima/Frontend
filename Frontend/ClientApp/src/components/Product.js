@@ -139,7 +139,7 @@ export class Product extends Component {
             name: product ? product.name ? product.name : "" :"",
             equipment: product ? product.equipment ? product.equipment : "" :"",
             vendorCode: product ? product.vendorCode ? product.vendorCode : "" :"",
-            size: product ? product.size ? product.size : "" :"",
+            size: product ? product.size ? product.size : null : null,
             description: product ? product.description ? product.description : "" :"",
             genderType: product ? product.genderType ? product.genderType : "" :"",
             is_Deleted: product ? product.is_Deleted : null,
@@ -470,7 +470,7 @@ export class Product extends Component {
                                             id="productSizeInput"
                                             name="productSize"
                                             type="number"
-                                            value={this.state.activeProduct ? this.state.activeProduct.size : ''}
+                                                    value={this.state.activeProduct ? this.state.activeProduct.size ? this.state.activeProduct.size : '' : ''}
                                             onChange={(ev) => {
                                                 this.changeActiveProduct(ev.target.value, 'size');
                                             }}
