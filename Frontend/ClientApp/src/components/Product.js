@@ -703,11 +703,11 @@ export class Product extends Component {
   render() {
     let contentsActual = this.state.loading
         ? <p><em>Загрузка...</em></p>
-        : this.renderProductTable(this.state.products.filter(i=> !i.is_Deleted));
+        : this.renderProductTable(this.state.products.filter(i => !i.is_Deleted && i.amounth > 0));
 
       let contentsDeleted = this.state.loading
           ? <p><em>Загрузка...</em></p>
-          : this.renderProductTable(this.state.products.filter(i => i.is_Deleted));
+          : this.renderProductTable(this.state.products.filter(i => i.is_Deleted || i.amounth === 0));
 
       let modal = this.renderModal();
 
