@@ -508,7 +508,7 @@ export class Supply extends Component {
                             <Input
                                 id="dateFrom"
                                 name="dateFrom"
-                                type="datetime-local"
+                                type="date"
                                 value={this.state.dateFromSearch ? this.state.dateFromSearch : ''}
                                 onChange={(ev) => {
                                     this.setState({ dateFromSearch: ev.target.value });
@@ -529,7 +529,7 @@ export class Supply extends Component {
                             <Input
                                 id="dateTo"
                                 name="dateTo"
-                                type="datetime-local"
+                                type="date"
                                 value={this.state.dateToSearch ? this.state.dateToSearch : ''}
                                 onChange={(ev) => {
                                     this.setState({ dateToSearch: ev.target.value });
