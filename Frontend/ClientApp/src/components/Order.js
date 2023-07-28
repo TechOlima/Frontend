@@ -122,8 +122,7 @@ export class Order extends Component {
         else {
             let activeOrder = this.state.activeOrder;
             activeOrder.orderProducts.push(productInOrder);
-            this.setState({ activeOrder: activeOrder });
-            console.log(activeOrder);
+            this.setState({ activeOrder: activeOrder });            
         }
     }
 

@@ -23,6 +23,7 @@ export class Supply extends Component {
             newProductID: null,
             newProductPrice: null,
             newProductQuantity: null,
+            newProductName: null,
             newProductSum: null,
             newProductSuccessMessage: null,
             newProductErrorMessage: null,
@@ -104,59 +105,80 @@ export class Supply extends Component {
     }
 
     async addProductInSupply() {
+
         let productInSupply = {
             productID: this.state.newProductID,
             supplyID: this.state.activeSupply.supplyID,
-            quantity: this.state.newProductQuantity
+            quantity: this.state.newProductQuantity,
+            productName: this.state.newProductName,
+            salePrice: this.state.newProductPrice,
+            totalSum: this.state.newProductSum
         };
-        const response = await fetch(settings.apiurl + '/Supply_Product/', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + this.state.token,
-                'Content-Type': 'application/json;',
-                'accept': 'text/plain'
-            },
-            body: JSON.stringify(productInSupply)
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
-            const data = await response.json();
-            this.setState({
-                newProductSuccessMessage: 'Данные успешно сохранены',
-                newProductErrorMessage: null,
-                activeSupply:
-                    this.getActiveSupply(data)
-            },
-                () => {
-                    this.populateSuppliesData();
-                });
+
+        if (this.state.activeSupply.supplyID) {
+            const response = await fetch(settings.apiurl + '/Supply_Product/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.state.token,
+                    'Content-Type': 'application/json;',
+                    'accept': 'text/plain'
+                },
+                body: JSON.stringify(productInSupply)
+            });
+            if (response.ok) {
+                const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
+                const data = await response.json();
+                this.setState({
+                    newProductSuccessMessage: 'Данные успешно сохранены',
+                    newProductErrorMessage: null,
+                    activeSupply:
+                        this.getActiveSupply(data)
+                },
+                    () => {
+                        this.populateSuppliesData();
+                    });
+            }
+            else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
         }
-        else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
+        else {
+            let activeSupply = this.state.activeSupply;
+            activeSupply.supplyProducts.push(productInSupply);
+            this.setState({ activeSupply : activeSupply });            
+        }        
     }
 
-    async deleteProductFromSupply(supply_ProductID) {
-        const response = await fetch(settings.apiurl + '/Supply_Product/' + supply_ProductID, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + this.state.token,
-                'Content-Type': 'application/json;',
-                'accept': 'text/plain'
-            },
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
-            const data = await response.json();
-            this.setState({
-                newProductSuccessMessage: 'Данные успешно удалены',
-                newProductErrorMessage: null,
-                activeSupply:
-                    this.getActiveSupply(data)
-            },
-                () => {
-                    this.populateSuppliesData();
-                });
+    async deleteProductFromSupply(supply_ProductID, index) {
+        if (supply_ProductID) {
+            const response = await fetch(settings.apiurl + '/Supply_Product/' + supply_ProductID, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + this.state.token,
+                    'Content-Type': 'application/json;',
+                    'accept': 'text/plain'
+                },
+            });
+            if (response.ok) {
+                const response = await fetch(settings.apiurl + '/Supplies/' + this.state.activeSupply.supplyID);
+                const data = await response.json();
+                this.setState({
+                    newProductSuccessMessage: 'Данные успешно удалены',
+                    newProductErrorMessage: null,
+                    activeSupply:
+                        this.getActiveSupply(data)
+                },
+                    () => {
+                        this.populateSuppliesData();
+                    });
+            }
+            else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
         }
-        else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
+        else {
+            if (index > -1) {
+                let activeSupply = this.state.activeSupply;
+                activeSupply.supplyProducts.splice(index, 1);
+                this.setState({ activeSupply: activeSupply });                
+            }
+        }
     }
 
     componentDidMount() {
@@ -187,7 +209,7 @@ export class Supply extends Component {
         const supplyID = this.state.activeSupply ? this.state.activeSupply.supplyID ? this.state.activeSupply.supplyID : null : null;
         return (
             <div>
-                <Modal isOpen={this.state.showModal} size={supplyID ? 'lg' : 'xs'} toggle={this.toggleModal}>
+                <Modal isOpen={this.state.showModal} size='lg' toggle={this.toggleModal}>
                     <ModalHeader toggle={this.toggleModal}>Карточка поставки</ModalHeader>
                     <ModalBody>
                         {this.state.successMessage ?
@@ -252,9 +274,7 @@ export class Supply extends Component {
                                         </Input>
                                     </FormGroup>                                    
                                 </Col>     
-                            </Row>                            
-                            {
-                                this.state.activeSupply?.supplyID ?
+                            </Row>
                                     <Card
                                         className="my-2"
                                         style={{
@@ -297,12 +317,13 @@ export class Supply extends Component {
                                                             </Label>
                                                         </Col>
                                                     </Row> 
-                                            {this.state.activeSupply?.supplyProducts?.map(supplyProduct =>
-                                                <Row key={supplyProduct.supply_ProductID}>
+                                            {this.state.activeSupply?.supplyProducts?.map((supplyProduct, index) =>
+                                                <Row key={index}>
                                                     <Col md={4}>
                                                         <Input
                                                             id="productName"
                                                             name="productName"
+                                                            readOnly
                                                             plaintext
                                                             defaultValue={supplyProduct.productName}
                                                         />
@@ -311,6 +332,7 @@ export class Supply extends Component {
                                                         <Input
                                                             id="purchasePrice"
                                                             name="purchasePrice"
+                                                            readOnly
                                                             plaintext
                                                             defaultValue={supplyProduct.purchasePrice}
                                                         />
@@ -319,6 +341,7 @@ export class Supply extends Component {
                                                         <Input
                                                             id="quantity"
                                                             name="quantity"
+                                                            readOnly
                                                             plaintext
                                                             defaultValue={supplyProduct.quantity}
                                                         />
@@ -327,6 +350,7 @@ export class Supply extends Component {
                                                         <Input
                                                             id="totalSum"
                                                             name="totalSum"
+                                                            readOnly
                                                             plaintext
                                                             defaultValue={supplyProduct.totalSum}
                                                         />
@@ -335,7 +359,7 @@ export class Supply extends Component {
                                                         <Button
                                                             color="danger"
                                                             size="sm"
-                                                            onClick={() => { this.deleteProductFromSupply(supplyProduct.supply_ProductID) }}
+                                                            onClick={() => { this.deleteProductFromSupply(supplyProduct.supply_ProductID, index ) }}
                                                         >
                                                             Удалить
                                                         </Button>
@@ -354,7 +378,8 @@ export class Supply extends Component {
                                                             let newProductPrice = product.purchasePrice;
                                                             this.setState({
                                                                 newProductID: ev.target.value,
-                                                                newProductPrice: newProductPrice
+                                                                newProductPrice: newProductPrice,
+                                                                newProductName: product.name,
                                                             });
                                                         }}
                                                     >
@@ -415,8 +440,7 @@ export class Supply extends Component {
                                                 </Col>
                                             </Row>
                                         </CardBody>
-                                    </Card> : ""
-                            }
+                                    </Card> 
                         </Form>
                     </ModalBody>
                     <ModalFooter>
@@ -424,9 +448,10 @@ export class Supply extends Component {
                             Удалить
                         </Button> : ''}
                         {' '}
-                        <Button color="secondary" onClick={this.saveActiveSupplyChanges}>
-                            Сохранить
-                        </Button>
+                        {this.state.activeSupply && this.state.activeSupply.supplyProducts.length > 0 ?
+                            <Button color="secondary" onClick={this.saveActiveSupplyChanges}>
+                                Сохранить
+                            </Button> : ''}
                     </ModalFooter>
                 </Modal>
             </div>
@@ -466,8 +491,8 @@ export class Supply extends Component {
                                 storage =>
                                     <li key={storage.storageID}>{storage.productName}-{storage.purchasePrice}</li>
                             )}</ul></td>
-                            <td>{new Date(supply.shippingDate).toLocaleDateString()}</td>
-                            <td>{new Date(supply.receivingDate).toLocaleDateString()}</td>                            
+                            <td>{supply.shippingDate ? new Date(supply.shippingDate).toLocaleDateString() : ''}</td>
+                            <td>{supply.receivingDate ? new Date(supply.receivingDate).toLocaleDateString() : ''}</td>
                             <td>{supply.note}</td>
                         </tr>
                     )}
