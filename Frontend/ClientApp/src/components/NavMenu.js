@@ -57,7 +57,7 @@ export class NavMenu extends Component {
                     <NavLink tag={Link} className="text-dark" to="/vk">VK</NavLink>
                           </NavItem>
                           <NavItem>
-                              <NavLink tag={Link} className="text-dark" disabled={this.getCookie("token") ? true : false } to="/login">{
+                              <NavLink tag={Link} className="text-dark" to="/login">{
                                   this.getCookie("token") ? <b>Авторизован</b> : "Войти"}</NavLink>
                           </NavItem>
                 <UncontrolledButtonDropdown>

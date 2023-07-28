@@ -22,6 +22,7 @@ export class Order extends Component {
           errorMessage: null,
           //переменные для добавления товаров в заказ
           newProductID: null,
+          newProductName: null,
           newProductPrice: null,
           newProductQuantity: null,
           newProductSum: null,
@@ -48,29 +49,38 @@ export class Order extends Component {
         let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
         return matches ? decodeURIComponent(matches[1]) : undefined;
     }
-    async deleteProductFromOrder(order_ProductID) {
-        const response = await fetch(settings.apiurl + '/Order_Product/' + order_ProductID, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + this.state.token,
-                'Content-Type': 'application/json;',
-                'accept': 'text/plain'
-            },
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
-            const data = await response.json();
-            this.setState({
-                newProductSuccessMessage: 'Данные успешно удалены',
-                newProductErrorMessage: null,
-                activeOrder:
-                    this.getActiveOrder(data)
-            },
-                () => {
-                    this.populateOrderData();
-                });
+    async deleteProductFromOrder(order_ProductID, index) {
+        if (order_ProductID) {
+            const response = await fetch(settings.apiurl + '/Order_Product/' + order_ProductID, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + this.state.token,
+                    'Content-Type': 'application/json;',
+                    'accept': 'text/plain'
+                },
+            });
+            if (response.ok) {
+                const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
+                const data = await response.json();
+                this.setState({
+                    newProductSuccessMessage: 'Данные успешно удалены',
+                    newProductErrorMessage: null,
+                    activeOrder:
+                        this.getActiveOrder(data)
+                },
+                    () => {
+                        this.populateOrderData();
+                    });
+            }
+            else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
         }
-        else this.setState({ errorMessage: 'Произошла ошибка при удалении', successMessage: null });
+        else {
+            if (index > -1) {
+                let activeOrder = this.state.activeOrder;
+                activeOrder.orderProducts.splice(index, 1);
+                this.setState({ activeOrder: activeOrder });
+            }
+        }
     }
 
     async addProductInOrder() {
@@ -78,32 +88,43 @@ export class Order extends Component {
         let productInOrder = {
             productID: this.state.newProductID,
             orderID: this.state.activeOrder.orderID,
-            quantity: this.state.newProductQuantity
+            quantity: this.state.newProductQuantity,
+            productName: this.state.newProductName,
+            salePrice: this.state.newProductPrice,
+            totalSum: this.state.newProductSum
         };
-        const response = await fetch(settings.apiurl + '/Order_Product/', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + this.state.token,
-                'Content-Type': 'application/json;',
-                'accept': 'text/plain'
-            },
-            body: JSON.stringify(productInOrder)
-        });
-        if (response.ok) {
-            const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
-            const data = await response.json();
-            this.setState({
-                newProductSuccessMessage: 'Данные успешно сохранены',
-                newProductErrorMessage: null,
-                activeOrder:
-                    this.getActiveOrder(data)
-            },
-                () => {
-                    this.populateOrderData();
-                });
+
+        if (this.state.activeOrder.orderID) {
+            const response = await fetch(settings.apiurl + '/Order_Product/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.state.token,
+                    'Content-Type': 'application/json;',
+                    'accept': 'text/plain'
+                },
+                body: JSON.stringify(productInOrder)
+            });
+            if (response.ok) {
+                const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID);
+                const data = await response.json();
+                this.setState({
+                    newProductSuccessMessage: 'Данные успешно сохранены',
+                    newProductErrorMessage: null,
+                    activeOrder:
+                        this.getActiveOrder(data)
+                },
+                    () => {
+                        this.populateOrderData();
+                    });
+            }
+            else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
         }
-        else this.setState({ newProductErrorMessage: 'Произошла ошибка при сохранении', newProductSuccessMessage: null });
-        
+        else {
+            let activeOrder = this.state.activeOrder;
+            activeOrder.orderProducts.push(productInOrder);
+            this.setState({ activeOrder: activeOrder });
+            console.log(activeOrder);
+        }
     }
 
     async orderChangeState(newstate) {
@@ -536,9 +557,7 @@ export class Order extends Component {
                                             </Row>
                                         </CardBody>
                                     </Card> : ""
-                            }
-                            {
-                                this.state.activeOrder?.orderID ?
+                            }                            
                                     <Card
                                         className="my-2"
                                         style={{
@@ -584,8 +603,8 @@ export class Order extends Component {
                                                         </Col>
                                                     </Row> : ""
                                             }
-                                            {this.state.activeOrder?.orderProducts?.map(orderProduct =>
-                                                <Row key={orderProduct.order_ProductID}>
+                                    {this.state.activeOrder?.orderProducts?.map((orderProduct, index) =>
+                                                <Row key={index}>
                                                     <Col md={4}>
                                                         <Input
                                                             id="orderProductName"
@@ -623,7 +642,7 @@ export class Order extends Component {
                                                         <Button
                                                             color="danger"
                                                             size="sm"
-                                                            onClick={() => { this.deleteProductFromOrder(orderProduct.order_ProductID) }}
+                                                            onClick={() => { this.deleteProductFromOrder(orderProduct.order_ProductID, index) }}
                                                         >
                                                             Удалить
                                                         </Button>
@@ -643,7 +662,8 @@ export class Order extends Component {
                                                             //console.log(newProductPrice);
                                                             this.setState({
                                                                 newProductID: ev.target.value,
-                                                                newProductPrice: product.salePrice
+                                                                newProductPrice: product.salePrice,
+                                                                newProductName: product.name
                                                             });
                                                         }}
                                                     >
@@ -693,8 +713,7 @@ export class Order extends Component {
                                                 </Col>
                                             </Row>
                                         </CardBody>
-                                    </Card> : ""
-                            }                            
+                                    </Card>            
                             <FormGroup>
                                 <Label for="note">
                                     Примечание
@@ -730,9 +749,10 @@ export class Order extends Component {
                             </div>
                          : '' : ''}
                         {' '}
-                        <Button color="secondary" onClick={this.saveActiveOrderChanges}>
-                            Сохранить
-                        </Button>
+                        {this.state.activeOrder && this.state.activeOrder.orderProducts.length > 0 ?
+                            <Button color="secondary" onClick={this.saveActiveOrderChanges}>
+                                Сохранить
+                            </Button> : ''}
                     </ModalFooter>
                 </Modal>
             </div>
