@@ -30,7 +30,8 @@ export class Order extends Component {
           newProductErrorMessage: null,
           autorize: false,
           token: null,
-          incorrectEmail: false
+          incorrectEmail: false,
+          states:[]
       };
       this.toggleModal = this.toggleModal.bind(this);
       this.editOrder = this.editOrder.bind(this);
@@ -44,6 +45,7 @@ export class Order extends Component {
       this.populateProductData = this.populateProductData.bind(this);      
       this.addProductInOrder = this.addProductInOrder.bind(this);
       this.deleteProductFromOrder = this.deleteProductFromOrder.bind(this);
+      this.populateStateData = this.populateStateData.bind(this);
     }
     getCookie(name) {
         let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
@@ -128,7 +130,6 @@ export class Order extends Component {
 
     async orderChangeState(newstate) {
         let activeOrder = this.getActiveOrder(this.state.activeOrder);
-
         const response = await fetch(settings.apiurl + '/Orders/' + this.state.activeOrder.orderID + '?state=' + newstate, {
             method: 'PATCH',
             headers: {
@@ -141,6 +142,14 @@ export class Order extends Component {
             let message = activeOrder.smsNotification === true || activeOrder.emailNotification === true ? "Клиенту отправлены уведомления." : "";
             this.setState({ successMessage: 'Статус заказа изменен. ' + message, errorMessage: null });
             this.populateOrderData();
+            //обновляем данные по заказу
+            const response = await fetch(settings.apiurl + '/Orders/' + activeOrder.orderID);
+            const data = await response.json();
+            activeOrder = this.getActiveOrder(data);
+            this.setState({
+                activeOrder: activeOrder
+            });
+            //console.log(activeOrder)
         }
         else this.setState({ errorMessage: 'Произошла ошибка при изменении статуса заказа', successMessage: null });
     }    
@@ -174,7 +183,7 @@ export class Order extends Component {
             clientName: order ? order.clientName ? order.clientName : "" : "",
             clientPhone: order ? order.clientPhone ? order.clientPhone : "" : "",
             clientEmail: order ? order.clientEmail ? order.clientEmail : "" : "",
-            state: order ? order.state ? typeof order.state === 'object' ? order.state.name : order.state : "" : "",
+            state: order ? order.state : "",
             totalSum: order ? order.totalSum ? order.totalSum : "" : "",
             deliveryAddress: order ? order.deliveryAddress ? order.deliveryAddress : "" : "",
             deliveryDate: order ? order.deliveryDate ? order.deliveryDate : "" : "",
@@ -242,6 +251,7 @@ export class Order extends Component {
     componentDidMount() {
         this.populateOrderData();
         this.populateProductData();
+        this.populateStateData();
         if (this.getCookie("token")) this.setState({ token: this.getCookie("token"), autorize: true });
         //$('#clientPhone').mask('+7 (999) 999-99-99');
     }
@@ -272,6 +282,12 @@ export class Order extends Component {
 
     renderModal() {
         const orderID = this.state.activeOrder ? this.state.activeOrder.orderID ? this.state.activeOrder.orderID : null : null;
+        //определяем статус в который можно перевести заказ
+        let currentState = this.state.states.filter(i => i.name === this.state.activeOrder?.state)[0];
+        let maxStateId = this.state.states[this.state.states.length - 1]?.stateID;
+        let newState = this.state.states.filter(i => i.stateID > currentState?.stateID && i.stateID < maxStateId)[0];
+        //console.log(currentState, newState);
+
         return (
             <div>
                 <Modal isOpen={this.state.showModal} size={orderID ? 'xl' : 'lg'} toggle={this.toggleModal}>
@@ -423,15 +439,11 @@ export class Order extends Component {
                                     </FormGroup>
                                     <FormGroup>
                                         <Label for="state">
-                                            Статус
-                                        </Label>
-                                        <Input
-                                            id="state"
-                                            name="state"
-                                            plaintext
-                                            placeholder=""
-                                            defaultValue={this.state.activeOrder ? this.state.activeOrder.state : ''}
-                                        />
+                                            Статус 
+                                        </Label><br/>
+                                        <Label for="state">
+                                            <b>{this.state.activeOrder ? this.state.activeOrder.state : ''}</b>
+                                        </Label> 
                                     </FormGroup>
                                     <FormGroup>
                                         <Label for="totalSum">
@@ -732,14 +744,14 @@ export class Order extends Component {
                     <ModalFooter>
                         {this.state.activeOrder ? this.state.activeOrder.orderID ?
                             <div>
-                                {this.state.activeOrder.state !== 'В доставке' && this.state.activeOrder.state !== 'Выполнен' ?
-                                    <Button onClick={() => this.orderChangeState('В доставке')}>
-                                    Передать в доставку
+                                {newState ?
+                                    <Button onClick={() => this.orderChangeState(newState.name)}>
+                                        Перевести в статус - {newState.name}
                                 </Button> : '' }
                                 {' '}
-                                {this.state.activeOrder.state !== 'Выполнен' ?
-                                    <Button onClick={() => this.orderChangeState('Выполнен')}>
-                                    Отметить выполненным
+                                {this.state.activeOrder.state !== 'Доставлен' && this.state.activeOrder.state !== 'Отменен' ?
+                                    <Button onClick={() => this.orderChangeState('Отменен')}>
+                                        Отменить заказ
                                 </Button> : ''}
                                 {' '}
                                 <Button color="danger" onClick={this.deleteActiveOrder}>
@@ -807,7 +819,7 @@ export class Order extends Component {
   }
 
     render() {
-        const actualStates = ['Оформлен', 'Оплачен', 'В доставке'];
+        const actualStates = ['Создан','Оформлен','Собран','В доставке'];
 
       let contentsActual = this.state.loading
           ? <p><em>Загрузка...</em></p>
@@ -877,5 +889,10 @@ export class Order extends Component {
         const response = await fetch(settings.apiurl + '/Products?SearchPattern=' + this.state.searchPattern);
         const data = await response.json();
         this.setState({ products: data, loading: false });
+    }
+    async populateStateData() {
+        const response = await fetch(settings.apiurl + '/States');
+        const data = await response.json();
+        this.setState({ states: data, loading: false });
     }
 }
